@@ -5,7 +5,6 @@
 [![Documentation Status](https://readthedocs.org/projects/frameon/badge/?version=latest)](https://frameon.readthedocs.io/en/latest/?badge=latest)
 [![Tests](https://github.com/PavelGrigoryevDS/frameon/actions/workflows/pytest.yml/badge.svg)](https://github.com/PavelGrigoryevDS/actions/workflows/pytest.yml)
 [![codecov](https://codecov.io/gh/PavelGrigoryevDS/frameon/branch/main/graph/badge.svg)](https://codecov.io/gh/PavelGrigoryevDS/frameon)
-[![Dependabot](https://api.dependabot.com/badges/status?host=github&repo=PavelGrigoryevDS/frameon)](https://dependabot.com)
 [![Dependabot](https://img.shields.io/badge/dependabot-active-brightgreen.svg)](https://github.com/PavelGrigoryevDS/frameon/network/updates)
 [![License](https://img.shields.io/pypi/l/frameon.svg)](https://opensource.org/licenses/MIT)
 

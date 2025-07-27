@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Environment files
+.env
+.venv/
+venv/
+env/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.ipynb_checkpoints/
+
+# macOS files
+.DS_Store
+
+# Pytest cache
+.pytest_cache/
+
+# Mypy cache
+.mypy_cache/
+
+# Tox cache
+.tox/
+
+# Coverage files
+.coverage
+
+# Hypothesis database files
+.hypothesis/
+
+# Pylint cache
+.pylint.d/
+.pylint_cache/
+
+# Flake8 cache
+.flake8

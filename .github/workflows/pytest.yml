@@ -1,0 +1,35 @@
+name: Python Package Tests
+
+on:
+  push:
+    branches:
+      - 'dev'       # Push tests in DEV
+      - 'feature/**' # Tests for spruce branches (For example, feature/new-model)
+  pull_request:
+    branches:
+      - 'main'      # Tests when creating PR in Main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"] # Python versions for testing
+        os: [ubuntu-latest, macos-latest, windows-latest] # Testing with different OS
+
+    steps:
+      - uses: actions/checkout@v4  # Clone repository
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install --with test
+
+      - name: Run tests
+        run: |
+          poetry run pytest tests/ --verbose  #Starting tests

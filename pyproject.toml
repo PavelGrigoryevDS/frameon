@@ -68,7 +68,24 @@ sphinx-exec-directive = "^0.6"
 pytest = "^8.4.1"
 pytest-cov = "^6.2.1"
 
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"] 
+
+[tool.coverage.run]
+source = ["src/frameon"]  
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/_version.py",
+    "src/frameon/utils/*",    
+    "src/frameon/datasets/*",
+    "src/frameon/utils/plotting/*"  
+]
+
+[tool.coverage.paths]
+source = ["src"] 

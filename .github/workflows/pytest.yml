@@ -1,4 +1,4 @@
-name: Python Package Tests
+name: tests
 
 on:
   push:
@@ -30,6 +30,14 @@ jobs:
           pip install poetry
           poetry install --with test
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
-          poetry run pytest tests/ --verbose  #Starting tests
+          poetry run pytest tests/ --cov=frameon --cov-report=xml --verbose
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}  
+          files: coverage.xml
+          flags: unittests 
+          verbose: true  

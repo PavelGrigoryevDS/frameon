@@ -23,7 +23,7 @@ Frameon extends pandas DataFrame with analysis methods while keeping all origina
 
 ## 📦 Installation
 
-❗ **Recommended** Use a virtual environment to prevent potential conflicts with existing package versions in your system. Frameon has specific version requirements that may adjust installed packages.
+❗ **Recommended:** Use a virtual environment to prevent potential conflicts with existing package versions in your system. 
 
 ### Basic Installation
 

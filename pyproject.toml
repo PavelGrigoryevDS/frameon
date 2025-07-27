@@ -86,6 +86,3 @@ omit = [
     "src/frameon/datasets/*",
     "src/frameon/utils/plotting/*"  
 ]
-
-[tool.coverage.paths]
-source = ["src"] 

@@ -34,7 +34,8 @@ env/
 .tox/
 
 # Coverage files
-.coverage
+.coverage*
+htmlcov/
 
 # Hypothesis database files
 .hypothesis/

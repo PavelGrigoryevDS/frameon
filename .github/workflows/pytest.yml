@@ -3,6 +3,7 @@ name: tests
 on:
   push:
     branches:
+      - 'main'
       - 'dev'       # Push tests in DEV
       - 'feature/**' # Tests for spruce branches (For example, feature/new-model)
   pull_request:

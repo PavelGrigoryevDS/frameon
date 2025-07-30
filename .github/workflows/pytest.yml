@@ -38,3 +38,7 @@ jobs:
           files: coverage.xml
           flags: unittests 
           verbose: true  
+          branch: main
+          override_branch: main
+          env_vars: PR_NUMBER=${{ github.event.pull_request.number }}    
+          commit_parent: ${{ github.event.pull_request.base.sha }}      

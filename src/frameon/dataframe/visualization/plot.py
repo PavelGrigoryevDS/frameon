@@ -11,7 +11,7 @@ from frameon.utils.plotting import *
 
 from matplotlib.colors import Colormap
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import FrameOn
     from frameon.utils.plotting.custom_figure import CustomFigure
 

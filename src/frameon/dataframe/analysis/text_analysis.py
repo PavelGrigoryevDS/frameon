@@ -14,7 +14,7 @@ from IPython.display import display
 from wordcloud import WordCloud
 import plotly.graph_objects as go
 from frameon.utils.miscellaneous import style_dataframe, add_empty_columns_for_df, is_text_column
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import FrameOn
     
 __all__ = ['TextAnalyzer']

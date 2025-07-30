@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 from plotly.graph_objs import Figure
 from frameon.utils.plotting import BarLineAreaBuilder, CustomFigure
 from scipy.stats import pearsonr
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import FrameOn
 
 __all__ = ['FrameOnAnomaly']
@@ -694,6 +694,10 @@ class FrameOnAnomaly:
         --------
         None            
         """
+        if self._df.empty:
+            raise ValueError(
+                "DataFrame is empty."
+            )   
         # Validate threshold based on method
         if anomaly_type == 'outlier':
             if method == 'quantile' and not (0 < threshold < 1):

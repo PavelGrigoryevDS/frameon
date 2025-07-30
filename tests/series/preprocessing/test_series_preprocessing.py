@@ -33,6 +33,28 @@ def text_series():
     texts = ['hello world', 'test text', 'another example'] * 10
     return SeriesOn(texts)
 
+@pytest.fixture 
+def categorical_data():
+    """Fixture with categorical data"""
+    df = FrameOn({
+        'category': ['A'] * 5 + ['B'] * 5,
+        'category2': ['C'] * 5 + ['D'] * 5,
+        'value': [1, 2, 3, 4, 5, 10, 20, 30, 40, 50],
+        'missing': [1, 2, np.nan, 4, 5, 10, np.nan, 30, 40, 50]
+    })
+    return SeriesOn(df['missing'], _parent_df=df)
+
+@pytest.fixture 
+def categorical_data_category_column():
+    """Fixture with categorical data"""
+    df = FrameOn({
+        'category': ['A'] * 5 + ['B'] * 5,
+        'category2': ['C'] * 5 + ['D'] * 5,
+        'value': [1, 2, 3, 4, 5, 10, 20, 30, 40, 50],
+        'missing': [1, 2, np.nan, 4, 5, 10, np.nan, 30, 40, 50]
+    })
+    return SeriesOn(df['category'], _parent_df=df)
+
 @pytest.fixture
 def df_with_time_column():
     """Fixture with time series data"""
@@ -131,6 +153,9 @@ class TestSeriesOnPreproc:
         else:
             result = preproc.to_categorical(method=method)
         assert result is not None
+        if method == 'quantiles':
+            result = preproc.to_categorical(method=method, quantiles=None)
+            assert result is not None
 
     @pytest.mark.parametrize("method", ['exponential', 'moving_avg', 'double', 'triple', 'median'])
     def test_smooth_time_series_methods(self, time_series, method):
@@ -181,3 +206,110 @@ class TestSeriesOnPreproc:
             df_with_time_column['missing1'].preproc.impute_missing(
                 auxiliary_cols=['nonexistent_column']
             )        
+            
+    def test_to_categorical_quantiles(self, numeric_series):
+        """Test quantiles method"""
+        preproc = SeriesOnPreproc(numeric_series)
+        result = preproc.to_categorical(
+            method='quantiles',
+            quantiles=[0, 0.5, 1],
+            labels=['low', 'high']
+        )
+        assert result.nunique() == 2
+        assert set(result.unique()) == {np.nan, 'low', 'high'}
+
+    def test_to_categorical_quantiles_none(self, numeric_series):
+        """Test quantiles method with quantiles=None"""
+        preproc = SeriesOnPreproc(numeric_series)
+        result = preproc.to_categorical(
+            method='quantiles',
+            quantiles=None,
+            n_categories=3
+        )
+        assert result.nunique() == 3
+
+    def test_to_categorical_clustering(self, numeric_series):
+        """Test clustering method"""
+        preproc = SeriesOnPreproc(numeric_series)
+        result = preproc.to_categorical(
+            method='clustering',
+            n_categories=2,
+            as_category=True
+        )
+        assert result.dtype.name == 'category'
+        assert len(result.cat.categories) == 2
+
+    def test_to_categorical_as_category(self, numeric_series):
+        """Test as_category parameter"""
+        preproc = SeriesOnPreproc(numeric_series)
+        result = preproc.to_categorical(method='equal_intervals', as_category=True)
+        assert result.dtype.name == 'category'
+
+    # smooth_time_series tests
+    def test_smooth_time_series_inplace(self, time_series):
+        """Test inplace smoothing"""
+        original = time_series.copy()
+        preproc = SeriesOnPreproc(time_series)
+        result = preproc.smooth_time_series(inplace=True)
+        assert result is None
+
+    def test_smooth_time_series_seasonality(self, time_series):
+        """Test seasonality detection"""
+        preproc = SeriesOnPreproc(time_series)
+        result = preproc.smooth_time_series(
+            adjust_for_seasonality=True,
+            seasonality_period=None
+        )
+        assert isinstance(result, pd.Series)
+
+    # transform_numeric tests
+    def test_transform_numeric_inplace(self, numeric_series):
+        """Test inplace transformation"""
+        for_preproc = numeric_series.copy()
+        preproc = SeriesOnPreproc(for_preproc)
+        result = preproc.transform_numeric(inplace=True)
+        assert result is None
+
+    # normalize_string_series tests
+    def test_normalize_string_series_inplace(self, categorical_data):
+        """Test inplace string normalization"""
+        s = SeriesOn(pd.Series(['Test  ', '  TEST', 'test']))
+        preproc = SeriesOnPreproc(s)
+        result = preproc.normalize_string_series(inplace=True)
+        assert result is None
+
+    # fill_missing_by_category tests
+    @pytest.mark.parametrize("strategy", ['simple', 'hierarchical'])
+    def test_fill_missing_by_category(self, categorical_data, strategy):
+        """Test different filling strategies"""
+        preproc = SeriesOnPreproc(categorical_data)
+        result = preproc.fill_missing_by_category(
+            category_columns='category',
+            strategy=strategy
+        )
+        assert not result.isna().any()
+
+    # calc_target_category_share tests
+    def test_calc_target_category_share(self, categorical_data_category_column):
+        """Test category share calculation"""
+        preproc = SeriesOnPreproc(categorical_data_category_column)
+        result = preproc.calc_target_category_share(
+            target_category='A',
+            group_columns=['category2']
+        )
+        assert isinstance(result, pd.DataFrame)
+        assert not result.empty
+
+    # Edge cases
+    def test_empty_series(self):
+        """Test with empty series"""
+        preproc = SeriesOnPreproc(SeriesOn([]))
+        with pytest.raises(ValueError):
+            preproc.to_categorical()
+
+    def test_single_value_series(self):
+        """Test with single value"""
+        preproc = SeriesOnPreproc(SeriesOn([1]))
+        result = preproc.transform_numeric()
+        assert isinstance(result, pd.Series)
+            

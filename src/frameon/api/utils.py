@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import Union, List, Dict, Any, Tuple, Literal, Optional
 from textwrap import dedent
+from pprint import pformat
 import warnings
 from IPython.display import display
 from frameon.utils.miscellaneous import style_dataframe

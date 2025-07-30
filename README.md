@@ -122,7 +122,6 @@ fig.show()
 
 <img src="https://raw.githubusercontent.com/PavelGrigoryevDS/frameon/main/images/cohort.png" width="800">
 
-
 ---
 
 ### Statistical Tests

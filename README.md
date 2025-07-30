@@ -3,7 +3,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/frameon.svg)](https://pypi.org/project/frameon/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/frameon.svg)](https://pypi.org/project/frameon/)
 [![Documentation Status](https://readthedocs.org/projects/frameon/badge/?version=latest)](https://frameon.readthedocs.io/en/latest/?badge=latest)
-[![Tests](https://github.com/PavelGrigoryevDS/frameon/actions/workflows/pytest.yml/badge.svg)](https://github.com/PavelGrigoryevDS/frameon/actions/workflows/pytest.yml)
+[![Tests](https://github.com/PavelGrigoryevDS/frameon/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/PavelGrigoryevDS/frameon/actions/workflows/pytest.yml)
 [![codecov](https://codecov.io/gh/PavelGrigoryevDS/frameon/branch/main/graph/badge.svg)](https://codecov.io/gh/PavelGrigoryevDS/frameon)
 [![Dependabot](https://img.shields.io/badge/dependabot-active-brightgreen.svg)](https://github.com/PavelGrigoryevDS/frameon/network/updates)
 [![License](https://img.shields.io/pypi/l/frameon.svg)](https://opensource.org/licenses/MIT)

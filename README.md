@@ -1,6 +1,6 @@
 # Frameon
 
-[![PyPI Version](https://img.shields.io/pypi/v/frameon.svg)](https://pypi.org/project/frameon/)
+[![PyPI Versions](https://img.shields.io/pypi/v/frameon?logo=PyPI)](https://pypi.org/project/frameon)
 [![Python Versions](https://img.shields.io/pypi/pyversions/frameon.svg)](https://pypi.org/project/frameon/)
 [![Documentation Status](https://readthedocs.org/projects/frameon/badge/?version=latest)](https://frameon.readthedocs.io/en/latest/?badge=latest)
 [![Tests](https://github.com/PavelGrigoryevDS/frameon/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/PavelGrigoryevDS/frameon/actions)
@@ -9,6 +9,8 @@
 [![License](https://img.shields.io/pypi/l/frameon.svg)](https://opensource.org/licenses/MIT)
 
 Frameon extends pandas DataFrame with analysis methods while keeping all original functionality intact.
+
+⭐ **If you find Frameon useful, please star the GitHub repo!** It helps others discover the project and motivates further development.
 
 ---
 

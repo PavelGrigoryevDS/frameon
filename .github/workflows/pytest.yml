@@ -2,11 +2,9 @@ name: tests
 
 on:
   push:
-    branches:
-      - 'feature/**' # Tests for spruce branches (For example, feature/new-model)
+    branches: [main]
   pull_request:
-    branches:
-      - 'main'      # Tests when creating PR in Main
+    branches: [main]
 
 jobs:
   test:
@@ -34,13 +32,9 @@ jobs:
           poetry run pytest tests/ --cov=frameon --cov-report=xml --verbose
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}  
           files: coverage.xml
           flags: unittests 
           verbose: true  
-          branch: main
-          override_branch: main
-          env_vars: PR_NUMBER=${{ github.event.pull_request.number }}    
-          commit_parent: ${{ github.event.pull_request.base.sha }}      

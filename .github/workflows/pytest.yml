@@ -2,12 +2,9 @@ name: tests
 
 on:
   push:
-    branches:
-      - 'dev'       # Push tests in DEV
-      - 'feature/**' # Tests for spruce branches (For example, feature/new-model)
+    branches: [main]
   pull_request:
-    branches:
-      - 'main'      # Tests when creating PR in Main
+    branches: [main]
 
 jobs:
   test:
@@ -35,7 +32,7 @@ jobs:
           poetry run pytest tests/ --cov=frameon --cov-report=xml --verbose
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}  
           files: coverage.xml

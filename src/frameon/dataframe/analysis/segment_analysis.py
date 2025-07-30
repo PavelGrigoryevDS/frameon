@@ -9,7 +9,7 @@ import plotly.io as pio
 from frameon.utils.plotting import CustomFigure
 from IPython.display import display
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import FrameOn
 
 __all__ = ['SegmentAnalyzer']
@@ -386,50 +386,13 @@ class SegmentAnalyzer:
         formatted_df['% of Total Count'] = formatted_df['% of Total Count'].apply(lambda x: f"{x:.2%}" if pd.notna(x) else na_rep)
         formatted_df[metrics] = formatted_df[metrics].map(lambda x: f"{x:.2f}" if pd.notna(x) else na_rep)
         formatted_df = formatted_df.T
-        
-        # Gradient coloring function (works with original numeric values)
-        def plotly_greens_gradient(val, min_val, max_val):
-            """Convert value to color from green gradient"""
-            if pd.isna(val):
-                return "rgb(255,255,255)"
-            
-            try:
-                normalized = (val - min_val) / (max_val - min_val) if max_val != min_val else 0
-                r = int(247 - (247 - 0) * normalized)
-                g = int(252 - (252 - 68) * normalized)
-                b = int(245 - (245 - 27) * normalized)
-                return f"rgb({r},{g},{b})"
-            except (ValueError, TypeError):
-                return "rgb(255,255,255)"
-        
-        def gradient_row(row):
-            """Apply gradient styling to row based on numeric values"""
-            numeric_values = pd.to_numeric(row.str.replace('%', ''), errors='coerce')
-            valid_vals = numeric_values[~numeric_values.isna()]
-            
-            if len(valid_vals) == 0:
-                return [''] * len(row)
-                
-            min_val, max_val = valid_vals.min(), valid_vals.max()
-            
-            styles = []
-            for val in numeric_values:
-                if pd.isna(val):
-                    styles.append('background-color: white; color: black')
-                else:
-                    bg_color = plotly_greens_gradient(val, min_val, max_val)
-                    r, g, b = map(int, bg_color[4:-1].split(','))
-                    brightness = 0.299*r + 0.587*g + 0.114*b
-                    text_color = 'white' if brightness < 128 else 'black'
-                    styles.append(f'background-color: {bg_color}; color: {text_color}')
-            return styles
-        
+               
         # Apply styling to the dataframe
         title = f"Segment Analysis for {dimension.replace('_', ' ').title()}" 
         styled_df = (
             formatted_df.style
             .set_caption(title) 
-            .apply(gradient_row, axis=1)
+            .apply(self._gradient_row, axis=1)
             .set_properties(**{
                 'border': '1px solid black',
                 'text-align': 'center',
@@ -453,6 +416,42 @@ class SegmentAnalyzer:
         )
         
         display(styled_df)
+      
+    def _gradient_row(self, row):
+        """Apply gradient styling to row based on numeric values"""
+        # Gradient coloring function (works with original numeric values)
+        def plotly_greens_gradient(val, min_val, max_val):
+            """Convert value to color from green gradient"""
+            if pd.isna(val):
+                return "rgb(255,255,255)"
+            
+            try:
+                normalized = (val - min_val) / (max_val - min_val) if max_val != min_val else 0
+                r = int(247 - (247 - 0) * normalized)
+                g = int(252 - (252 - 68) * normalized)
+                b = int(245 - (245 - 27) * normalized)
+                return f"rgb({r},{g},{b})"
+            except (ValueError, TypeError):
+                return "rgb(255,255,255)"
+        numeric_values = pd.to_numeric(row.str.replace('%', ''), errors='coerce')
+        valid_vals = numeric_values[~numeric_values.isna()]
+        
+        if len(valid_vals) == 0:
+            return [''] * len(row)
+            
+        min_val, max_val = valid_vals.min(), valid_vals.max()
+        
+        styles = []
+        for val in numeric_values:
+            if pd.isna(val):
+                styles.append('background-color: white; color: black')
+            else:
+                bg_color = plotly_greens_gradient(val, min_val, max_val)
+                r, g, b = map(int, bg_color[4:-1].split(','))
+                brightness = 0.299*r + 0.587*g + 0.114*b
+                text_color = 'white' if brightness < 128 else 'black'
+                styles.append(f'background-color: {bg_color}; color: {text_color}')
+        return styles
 
     def metric_by_dimensions_table(
         self,

@@ -24,7 +24,7 @@ from frameon.utils.miscellaneous import (
 )
 from frameon.utils.plotting import plot_utils
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import FrameOn, SeriesOn
 
 __all__ = ['SeriesOnAnomaly']
@@ -322,7 +322,7 @@ class SeriesOnAnomaly:
         method: Literal['iqr', 'zscore', 'quantile'] = 'quantile',
         threshold: float = 0.05,
         title: Optional[str] = None
-    ) -> Union[None, go.Figure]:
+    ) -> CustomFigure:
         """
         Plot anomalies over time using resampling.
         
@@ -351,7 +351,7 @@ class SeriesOnAnomaly:
             
         Returns:
         --------
-            Union[None, go.Figure]                  
+            CustomFigure                 
         """
         # Get parent DataFrame
         parent_df = self._series._parent_df
@@ -596,7 +596,7 @@ class SeriesOnAnomaly:
             hovermode='x', 
             showlegend=False
         )
-        CustomFigure(fig).show()
+        return CustomFigure(fig)
     
     # ====================== HELPER METHODS ======================
     

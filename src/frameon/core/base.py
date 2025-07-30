@@ -3,7 +3,7 @@ from typing import Optional, Any, Union, overload, TYPE_CHECKING
 from functools import cached_property
 import copy
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.series.explore import SeriesOnExplore
     from frameon.series.preprocessing import SeriesOnPreproc
     from frameon.dataframe.explore import FrameOnExplore

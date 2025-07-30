@@ -17,7 +17,7 @@ from frameon.utils.miscellaneous import (analyze_anomalies_all_categories,
                                               style_dataframe)
 from frameon.utils.plotting import plot_utils
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import FrameOn, SeriesOn
 
 __all__ = ['SeriesOnPreproc']
@@ -461,8 +461,12 @@ class SeriesOnPreproc:
 
         max_lag = min(max_lag, len(s)//2)
         acf_values = acf(s.dropna(), nlags=max_lag)
-        peaks = np.where((acf_values[1:] > acf_values[:-1]) &
-                        (acf_values[1:] > acf_values[2:]))[0] + 1
+        # Find peaks by comparing with neighbors
+        peaks = []
+        for i in range(1, len(acf_values)-1):
+            if acf_values[i] > acf_values[i-1] and acf_values[i] > acf_values[i+1]:
+                peaks.append(i)
+        
         return peaks[0] if len(peaks) > 0 else None
 
     def transform_numeric(
@@ -1155,8 +1159,6 @@ class SeriesOnPreproc:
             raise ValueError('Current column should not be in group_columns')           
         if len(series) == 0:
             raise ValueError("Series is empty")
-        if not pd.api.types.is_string_dtype(series):
-            raise ValueError(f"Current column must be categorical")
         
         if df is None:
             raise ValueError("Series must belong to a DataFrame")

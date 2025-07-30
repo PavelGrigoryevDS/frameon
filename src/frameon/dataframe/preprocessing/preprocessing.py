@@ -28,7 +28,7 @@ from frameon.utils.miscellaneous import (analyze_anomalies_all_categories,
                                               style_dataframe)
 from frameon.utils.plotting import plot_utils
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import FrameOn, SeriesOn
 
 

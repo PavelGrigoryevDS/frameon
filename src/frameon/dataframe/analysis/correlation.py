@@ -11,7 +11,7 @@ from IPython.display import display
 from frameon.utils.plotting import CustomFigure
 import warnings
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import FrameOn
 
 __all__ = ['CorrelationAnalyzer']

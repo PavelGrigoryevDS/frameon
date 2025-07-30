@@ -106,7 +106,7 @@ class StatisticalTests:
             raise ValueError("DataFrame cannot be None")
 
         if not isinstance(df, pd.DataFrame):
-            raise TypeError("Input must be a pandas DataFrame")
+            raise ValueError("Input must be a pandas DataFrame")
 
         if df.empty:
             raise ValueError("DataFrame cannot be empty")

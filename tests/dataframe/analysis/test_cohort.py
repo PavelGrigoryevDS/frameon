@@ -203,4 +203,117 @@ class TestCohortAnalyzer:
             display_mode='summary',
             summary_stat=summary_stat
         )
-        assert result is not None            
+        assert result is not None
+
+    def test_helper_methods(self, sample_transactions):
+        """Test helper methods directly"""
+        analyzer = CohortAnalyzer(sample_transactions)
+        
+        # Test _validate_parameters
+        with pytest.raises(ValueError):
+            analyzer._validate_parameters({'margin': 1.5})  # Invalid margin
+        
+        # Test _validate_data
+        analyzer.config_cohort.user_id_col = 'user_id'
+        analyzer.config_cohort.date_col = 'date'
+        analyzer._validate_data()  # Should pass with valid data
+        
+        # Test _check_duplicate_user_dates
+        analyzer._check_duplicate_user_dates()  # Should pass with test data
+        
+        # Test _check_negative_revenue
+        analyzer.config_cohort.revenue_col = 'revenue'
+        analyzer._check_negative_revenue()  # Should pass with test data
+
+    def test_edge_cases_extended(self):
+        """Test additional edge cases"""
+        # Test all NaN values
+        df = FrameOn({
+            'user_id': [np.nan, np.nan],
+            'date': [np.nan, np.nan],
+            'revenue': [np.nan, np.nan]
+        })
+        analyzer = CohortAnalyzer(df)
+        with pytest.raises(ValueError):
+            analyzer.cohort(user_id_col='user_id', date_col='date')
+        
+        # Test negative revenue
+        df = FrameOn({
+            'user_id': ['user1', 'user2'],
+            'date': [datetime(2023,1,1), datetime(2023,1,2)],
+            'revenue': [-100, 200]
+        })
+        analyzer = CohortAnalyzer(df)
+        analyzer.cohort(
+            user_id_col='user_id',
+            date_col='date',
+            revenue_col='revenue',
+            mode='revenue',
+            show_warnings=True
+        )
+        
+        # Test single cohort period
+        df = FrameOn({
+            'user_id': ['user1', 'user2'],
+            'date': [datetime(2023,1,1), datetime(2023,1,2)]
+        })
+        analyzer = CohortAnalyzer(df)
+        result = analyzer.cohort(user_id_col='user_id', date_col='date')
+        assert result is not None
+
+    def test_visualization_outputs(self, sample_transactions):
+        """Verify visualization output formats"""
+        analyzer = CohortAnalyzer(sample_transactions)
+        
+        # Test heatmap output
+        heatmap = analyzer.cohort(
+            user_id_col='user_id',
+            date_col='date',
+            display_mode='matrix'
+        )
+        assert hasattr(heatmap, 'show')  # Verify it's a plotly figure
+        
+        # Test summary output
+        summary = analyzer.cohort(
+            user_id_col='user_id',
+            date_col='date',
+            display_mode='summary',
+            summary_stat='mean'
+        )
+        assert hasattr(summary, 'show')  # Verify it's a plotly figure
+
+    def test_comprehensive_parameters(self, sample_transactions):
+        """Test comprehensive parameter combinations"""
+        analyzer = CohortAnalyzer(sample_transactions)
+        
+        # Test with all optional parameters
+        result = analyzer.cohort(
+            user_id_col='user_id',
+            date_col='date',
+            revenue_col='revenue',
+            order_id_col='order_id',
+            mode='arpu',
+            display_mode='summary',
+            granularity='week',
+            min_cohort_size=5,
+            max_cohort_size=100,
+            margin=0.5,
+            include_period0=False,
+            month_lifetime_method='calendar',
+            cumulative=True,
+            summary_stat='weighted_mean',
+            text_auto='.2f',
+            color_continuous_scale='Blues',
+            title='Test Cohort',
+            height=800,
+            width=1200,
+            show_colorbar=False,
+            xgap=2,
+            ygap=2,
+            row_heights=[20, 1],
+            vertical_spacing=0.1,
+            xaxis_title='Period',
+            yaxis_title='Cohort',
+            show_warnings=True
+        )
+        assert result is not None

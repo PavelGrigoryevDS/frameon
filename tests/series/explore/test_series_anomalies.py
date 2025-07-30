@@ -163,4 +163,88 @@ class TestSeriesOnAnomaly:
         detector = SeriesOnAnomaly(SeriesOn([1]*100))
         result = detector.detect_outliers(method=OutlierMethod.IQR, return_outliers=True)
         assert result.empty  # No outliers in constant data
+
+    # Confidence interval method tests
+    def test_confidence_method(self, normal_series):
+        """Test confidence interval outlier detection"""
+        detector = SeriesOnAnomaly(normal_series)
+        result = detector.detect_outliers(
+            method=OutlierMethod.CONFIDENCE,
+            threshold=0.05,
+            return_outliers=True
+        )
+        assert not result.empty
+
+    def test_confidence_method_edge_cases(self):
+        """Test confidence interval method edge cases"""
+        # Small sample size
+        detector = SeriesOnAnomaly(SeriesOn([1, 2, 3, 4, 100]))
+        result = detector.detect_outliers(
+            method=OutlierMethod.CONFIDENCE,
+            threshold=0.1,
+            return_outliers=True
+        )
+
+    # anomalies_by_categories tests
+    def test_anomalies_by_categories(self, df_with_time_column):
+        """Test anomalies_by_categories method"""
+        series = SeriesOn(df_with_time_column['value'], _parent_df=df_with_time_column)
+        detector = SeriesOnAnomaly(series)
+        
+        # Test with outlier detection
+        detector.anomalies_by_categories(
+            anomaly_type='outlier',
+            method='iqr'
+        )
+        
+        # Test with missing value detection
+        detector.anomalies_by_categories(
+            anomaly_type='missing'
+        )
+        
+        # Test with zero detection
+        detector.anomalies_by_categories(
+            anomaly_type='zero'
+        )
+
+    # anomalies_over_time tests
+    def test_anomalies_over_time(self, df_with_time_column):
+        """Test anomalies_over_time method"""
+        series = SeriesOn(df_with_time_column['missing1'], _parent_df=df_with_time_column)
+        detector = SeriesOnAnomaly(series)
+        
+        # Test with daily frequency
+        result = detector.anomalies_over_time(
+            time_column='date',
+            freq='D'
+        )
+        assert result is not None
+        
+        # Test with weekly frequency
+        result = detector.anomalies_over_time(
+            time_column='date',
+            freq='W'
+        )
+        assert result is not None
+
+    # plot_rolling_anomaly_rate tests
+    def test_plot_rolling_anomaly_rate(self, df_with_time_column):
+        """Test plot_rolling_anomaly_rate method"""
+        series = SeriesOn(df_with_time_column['missing1'], _parent_df=df_with_time_column)
+        detector = SeriesOnAnomaly(series)
+        
+        # Test with weekly window
+        result = detector.plot_rolling_anomaly_rate(
+            time_column='date',
+            window=7,
+        )
+        assert result is not None
+        
+        # Test with monthly window
+        result = detector.plot_rolling_anomaly_rate(
+            time_column='date',
+            window=30,
+        )
+        assert result is not None
+
         

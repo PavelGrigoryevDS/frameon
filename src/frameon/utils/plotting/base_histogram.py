@@ -86,7 +86,6 @@ class HistogramBuilder:
             self._create_box_histogram_view()
         elif self.config.mode == 'dual_hist_qq':
             self._create_qq_histogram_view()
-
         self._apply_final_styling()
 
         if self.config.renderer is not None:
@@ -823,7 +822,8 @@ class HistogramBuilder:
                 })
 
         self.figure = CustomFigure(self.figure).update(**update_config)
-        
+        self.figure.update_xaxes(title_standoff=7)
+        self.figure.update_yaxes(title_standoff=7)
         if self.config.xaxis_type == 'category':
             x_data = self.figure.data[0].x
             if x_data is not None:

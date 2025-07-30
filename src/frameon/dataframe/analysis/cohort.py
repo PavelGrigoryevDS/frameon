@@ -7,7 +7,7 @@ from typing import get_type_hints
 from plotly.subplots import make_subplots
 from dataclasses import fields, field
 from frameon.utils.plotting import CustomFigure
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from frameon.core.base import SmartDataFrame
 
 __all__ = ['CohortAnalyzer']
@@ -933,10 +933,12 @@ class CohortAnalyzer:
             # If we have a calculation of 30 days, then each cohort will have its own potentially possible last period
             all_periods = range(self.max_lifetime.max() + 1)
             result = result.reindex(index=all_cohorts, columns=all_periods, fill_value=0)
+            self.cohort_sizes = self.cohort_sizes.reindex(index=all_cohorts, fill_value=0)
             mask = result.columns.values > self.max_lifetime.values[:, None]
         else:
             all_periods = range(self.max_lifetime + 1)
             result = result.reindex(index=all_cohorts, columns=all_periods, fill_value=0)
+            self.cohort_sizes = self.cohort_sizes.reindex(index=all_cohorts, fill_value=0)
             # Create mask for upper triangle
             mask = np.zeros_like(result, dtype=bool)
             for i in range(mask.shape[0]):
@@ -961,7 +963,6 @@ class CohortAnalyzer:
                 size_condition &= (cohort_sizes >= config.min_cohort_size)
             if config.max_cohort_size:
                 size_condition &= (cohort_sizes <= config.max_cohort_size)
-
             excluded_cohorts = result[~size_condition]
 
             if not excluded_cohorts.empty:
@@ -972,7 +973,6 @@ class CohortAnalyzer:
                 if config.max_cohort_size:
                     size_range.append(f"max {config.max_cohort_size}")
                 print(f"Excluded {len(excluded_cohorts)} cohorts ({pct:.1f}%) outside {', '.join(size_range)} size range")
-
             result = result[size_condition]
 
             # Cut the table if the first cohort has NA at the end
@@ -1182,6 +1182,8 @@ class CohortAnalyzer:
             title = self._get_title()
             if not yaxis_title_text:
                 yaxis_label = title.split('by Lifetime')[0]
+        else:
+            title = config.title
         hover_data = {}
         if self.config_cohort.mode == 'retention':
             hover_data = {'value': ':.1%'}

@@ -129,9 +129,14 @@ html_theme_options = {
     'icon_links': [
         {
             'name': 'PyPI',
-            'url': 'https://pypi.org/project/my-pro/',
+            'url': 'https://pypi.org/project/frameon/',
             'icon': 'fa-brands fa-python',
         },
+        {
+            "name": "GitHub",
+            "url": "https://github.com/PavelGrigoryevDS/frameon",
+            "icon": "fa-brands fa-github",
+        },     
     ],
     'show_nav_level': 3,
     'navigation_depth': 4,

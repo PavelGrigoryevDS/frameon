@@ -506,7 +506,9 @@ class BarLineAreaBuilder:
         # Apply aggregation if specified
         if self.config.agg_func:
             self._apply_aggregation()
-
+        else:
+            # For static plotly rendering better convert datetime to string.
+            self._convert_datetime_columns()
         # Apply normalization if specified
         if self.config.norm_by:
             self._apply_normalization()
@@ -716,7 +718,18 @@ class BarLineAreaBuilder:
         # Change type for all categories to str for plotly
         if group_cols:
             df_agg[group_cols] = df_agg[group_cols].astype(str)
-        plotly_kwargs['data_frame'] = df_agg
+        self.plotly_kwargs['data_frame'] = df_agg
+
+    def _convert_datetime_columns(self, format: str = '%Y-%m-%d %H:%M:%S') -> pd.DataFrame:
+        """Convert all datetime columns in a DataFrame to formatted strings. For better static rendering"""
+        plotly_kwargs = self.plotly_kwargs
+        df = plotly_kwargs['data_frame'].copy()
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime(format)
+        
+        self.plotly_kwargs['data_frame'] = df      
+        
         
     def _handle_datetime_columns(self, group_cols: List[str]) -> List[str]:
         """Handle datetime columns with frequency specification."""

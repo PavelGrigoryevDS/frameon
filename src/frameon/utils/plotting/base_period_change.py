@@ -126,6 +126,8 @@ def period_change(
         plotly_kwargs['width'] = 800
     if 'height' not in plotly_kwargs:
         plotly_kwargs['height'] = 400
+    # Convert datetime to string for better plotly static rendering
+    df_agg['period'] = df_agg['period'].dt.strftime('%Y-%m-%d %H:%M:%S')
     # Create plot with all parameters
     fig = px.bar(
         df_agg,

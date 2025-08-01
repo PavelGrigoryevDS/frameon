@@ -43,7 +43,9 @@ class HeatmapBuilder:
             self._apply_trimming_categories()
         # Prepare data
         self._prepare_data()
-
+        # For better plotly static rendering convert datetime to string
+        if pd.api.types.is_datetime64_any_dtype(self.plotly_kwargs['data_frame'].columns):
+            self.plotly_kwargs['data_frame'].columns = self.plotly_kwargs['data_frame'].columns.strftime('%Y-%m-%d %H:%M:%S')
         # Process category orders
         if self.plotly_kwargs.get('category_orders') is not None:
             self._process_category_orders()

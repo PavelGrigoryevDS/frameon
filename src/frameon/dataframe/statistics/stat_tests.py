@@ -1881,7 +1881,7 @@ class StatisticalTests:
         results = model.fit(**fit_kwargs)
 
         if show_summary:
-            print(results.summary())
+            display(results.summary())
 
 
 
@@ -1967,7 +1967,7 @@ class StatisticalTests:
         results = model.fit()
 
         if show_summary:
-            print(results.summary())
+            display(results.summary())
 
         if show_plots:
             self._show_minimal_diagnostic_plots(results)
@@ -2055,7 +2055,7 @@ class StatisticalTests:
 
         results = model.fit(**fit_kwargs)
         if show_summary:
-            print(results.summary())
+            display(results.summary())
 
         # Apply p-value adjustment if requested
         if p_adjust:
@@ -2139,7 +2139,7 @@ class StatisticalTests:
         results = model.fit(q=q)
 
         if show_summary:
-            print(results.summary())
+            display(results.summary())
 
         if show_plots:
             self._show_minimal_diagnostic_plots(results)
@@ -2217,7 +2217,7 @@ class StatisticalTests:
             })
 
             if show_summary:
-                print(result.summary())
+                display(result.summary())
                 print("\n🔹 Adjusted p-values (method: {}):".format(p_adjust))
                 display(summary_df[['coef', 'p_value', 'p_adj']].round(4))
         elif show_summary:
@@ -2282,7 +2282,7 @@ class StatisticalTests:
         results = model.fit()
 
         if show_summary:
-            print(results.summary())
+            display(results.summary())
 
         if show_plots:
             self._show_minimal_diagnostic_plots(results)

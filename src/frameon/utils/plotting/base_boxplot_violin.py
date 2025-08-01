@@ -287,6 +287,8 @@ class DistributionPlotBuilder:
         df = pd.DataFrame({x_col: all_periods}).merge(df, on=x_col, how='left')
         if 'color' in self.plotly_kwargs:
             df[self.plotly_kwargs.get('color')] = df[self.plotly_kwargs.get('color')].astype(str)
+        # Convert datetime to string for better plotly static rendering
+        df[x_col] = df[x_col].dt.strftime('%Y-%m-%d %H:%M:%S')
         self.plotly_kwargs['data_frame'] = df
 
     def _determine_cat_num_columns(self) -> None:

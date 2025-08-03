@@ -1883,8 +1883,6 @@ class StatisticalTests:
         if show_summary:
             display(results.summary())
 
-
-
         if show_plots:
             self._show_minimal_diagnostic_plots(results)
 
@@ -2221,7 +2219,7 @@ class StatisticalTests:
                 print("\n🔹 Adjusted p-values (method: {}):".format(p_adjust))
                 display(summary_df[['coef', 'p_value', 'p_adj']].round(4))
         elif show_summary:
-            print(result.summary())
+            display(result.summary())
 
         if return_results:
             return results

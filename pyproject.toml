@@ -1,6 +1,6 @@
 [project]
 name = "frameon"
-version = "0.1.1"
+version = "0.1.2"
 description = "Frameon extends pandas DataFrame with analysis methods while keeping all original functionality intact."
 authors = [
     {name = "Pavel Grigoryev",email = "pavel.grigoryev.ds@gmail.com"}

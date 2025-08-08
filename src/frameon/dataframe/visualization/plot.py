@@ -1,21 +1,48 @@
-from typing import (Any, Callable, Dict, Generator, List, Literal, Optional,
-                    Tuple, TYPE_CHECKING, Union, get_type_hints)
+"""
+Data visualization module.
+
+This module provides tools for creating various types of plots and charts
+from dataframe data, including bar charts, line plots, heatmaps, and more.
+"""
+
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-from plotly.colors import make_colorscale
-
-from frameon.utils.plotting import *
-
 from matplotlib.colors import Colormap
 
-if TYPE_CHECKING: # pragma: no cover
-    from frameon.core.base import FrameOn
-    from frameon.utils.plotting.custom_figure import CustomFigure
+from frameon.utils.plotting import (
+    BarLineAreaBuilder,
+    DistributionPlotBuilder,
+    CatCompareBuilder,
+    HeatmapBuilder,
+    HistogramBuilder,
+    PairplotBuilder,
+    parallel_categories,
+    period_change,
+    create_pie_bar,
+    create_plot_ci,
+    create_qqplot,
+    create_wordcloud_plotly,
+    CustomFigure,
+)
 
-__all__ = ['FrameOnPlots']
+if TYPE_CHECKING:  # pragma: no cover
+    from frameon.core.base import FrameOn
+
+__all__ = ["FrameOnPlots"]
+
 
 class FrameOnPlots:
     def __init__(self, df: "FrameOn"):
@@ -26,9 +53,9 @@ class FrameOnPlots:
         """
         Merge default plotly settings with method-specific settings.
         Preserves default settings except for explicitly provided values.
-        
+
         Special handling for:
-        
+
         - labels: merge dictionaries with method values taking precedence
         - category_orders: merge dictionaries with method values taking precedence
         - Other settings: method values override defaults
@@ -37,25 +64,25 @@ class FrameOnPlots:
         default_settings = self.plotly_settings
         # Initialize merged settings with defaults
         merged_settings = default_settings.copy()
-        labels = kwargs.pop('labels', {})
+        labels = kwargs.pop("labels", {})
         if isinstance(labels, pd.Series):
             labels = labels.to_dict()
         if not labels:
             labels = {}
-        category_orders = kwargs.pop('category_orders', {})
+        category_orders = kwargs.pop("category_orders", {})
         if isinstance(category_orders, pd.Series):
             category_orders = category_orders.to_dict()
         if not category_orders:
             category_orders = {}
         # Handle labels merge (preserve defaults except for explicitly provided keys)
-        merged_labels = default_settings.get('labels', {}).copy()
+        merged_labels = default_settings.get("labels", {}).copy()
         merged_labels.update(labels)
-        merged_settings['labels'] = merged_labels
-        
+        merged_settings["labels"] = merged_labels
+
         # Handle category_orders merge (preserve defaults except for explicitly provided keys)
-        merged_orders = default_settings.get('category_orders', {}).copy()
+        merged_orders = default_settings.get("category_orders", {}).copy()
         merged_orders.update(category_orders)
-        merged_settings['category_orders'] = merged_orders
+        merged_settings["category_orders"] = merged_orders
         # Update with remaining kwargs (method-specific settings take precedence)
         merged_settings.update(kwargs)
         return merged_settings
@@ -70,15 +97,17 @@ class FrameOnPlots:
         agg_func: Optional[Union[str, Callable]] = None,
         freq: Optional[str] = None,
         agg_column: Optional[str] = None,
-        norm_by: Optional[Union[str, Literal['all']]] = None,
+        norm_by: Optional[Union[str, Literal["all"]]] = None,
         trim_top_n_x: Optional[int] = None,
         trim_top_n_y: Optional[int] = None,
         trim_top_n_color: Optional[int] = None,
         trim_top_n_facet_col: Optional[int] = None,
         trim_top_n_facet_row: Optional[int] = None,
         trim_top_n_animation_frame: Optional[int] = None,
-        trim_top_n_direction: Literal['top', 'bottom'] = 'top',
-        trim_top_n_agg_func: Literal['mean', 'median', 'sum', 'count', 'nunique'] = 'count',
+        trim_top_n_direction: Literal["top", "bottom"] = "top",
+        trim_top_n_agg_func: Literal[
+            "mean", "median", "sum", "count", "nunique"
+        ] = "count",
         show_group_size: bool = True,
         min_group_size: Optional[int] = None,
         show_box: bool = False,
@@ -89,10 +118,11 @@ class FrameOnPlots:
         show_legend_title: bool = False,
         observed_for_groupby: bool = True,
         horizontal_spacing: Optional[float] = None,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
-        Creates a bar chart using the Plotly Express library. This function is a wrapper around Plotly Express bar and accepts all the same parameters, allowing for additional customization and functionality.
+        Creates a bar chart using the Plotly Express library. This function is a wrapper around Plotly Express bar
+        and accepts all the same parameters, allowing for additional customization and functionality.
 
         Parameters:
         -----------
@@ -112,14 +142,14 @@ class FrameOnPlots:
             Resample frequency for resample. Options: 'ME', 'W', D' and others
         category_orders : dict, optional
             Specifies the order of categories for different dimensions.
-            
+
             Keys should be column names, values can be either:
-            
+
             - A list of category values in desired order
             - A string specifying sorting method:
 
             For non-aggregated data (agg_mode=None):
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'count ascending/descending': Sort by count of values
             - 'min ascending/descending': Sort by minimum value
@@ -129,32 +159,39 @@ class FrameOnPlots:
             - 'median ascending/descending': Sort by median value
 
             For aggregated data (agg_mode='groupby' or 'resample'):
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'ascending/descending': Sort by aggregated value
 
             Examples:
-            
+
                 - {'city': 'count descending'}  # Sort cities by count of values
                 - {'product': ['A', 'B', 'C']}  # Manual order
                 - {'month': 'category ascending'}  # Alphabetical order
-        
+
         labels : dict, optional
             A dictionary mapping column names to their display names.
         norm_by: str, optional
-            The name of the column to normalize by. If set to 'all', normalization will be performed based on the sum of all values in the dataset.
+            The name of the column to normalize by. If set to 'all', normalization will be performed based
+            on the sum of all values in the dataset.
         trim_top_n_x : int, optional
-            Only for aggregation mode. The number of top categories x axis to include in the chart. For top using num column and agg_func.
+            Only for aggregation mode. The number of top categories x axis to include in the chart.
+            For top using num column and agg_func.
         trim_top_n_y : int, optional
-            Only for aggregation mode. The number of top categories y axis to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories y axis to include in the chart.
+            For top using num column and agg_func
         trim_top_n_color : int, optional
-            Only for aggregation mode. The number of top categories legend to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories legend to include in the chart.
+            For top using num column and agg_func
         trim_top_n_facet_col : int, optional
-            Only for aggregation mode. The number of top categories in facet_col to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in facet_col to include in the chart.
+            For top using num column and agg_func
         trim_top_n_facet_row : int, optional
-            Only for aggregation mode. The number of top categories in facet_row to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in facet_row to include in the chart.
+            For top using num column and agg_func
         trim_top_n_animation_frame : int, optional
-            Only for aggregation mode. The number of top categories in animation_frame to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in animation_frame to include in the chart.
+            For top using num column and agg_func
         trim_top_n_direction : str, optional
             Trim from bottom or from top. Default is 'top'
         trim_top_n_agg_func : str, optional
@@ -171,12 +208,15 @@ class FrameOnPlots:
             Whether to show boxplot in subplots
         show_count : bool, optional
             Whether to show countplot in subplots
-            
-            - Uses column 'count_for_subplots' (default) to display group sizes. By default count_for_subplots has label Value.
+
+            - Uses column 'count_for_subplots' (default) to display group sizes.
+
+            By default count_for_subplots has label Value.
+
             - Column name can be customized via labels parameter:
-            
+
             labels={'count_for_subplots': 'Custom Name'}
-            
+
             - Only available when agg_func is specified
 
         lower_quantile : float, optional
@@ -203,16 +243,20 @@ class FrameOnPlots:
             Interactive Plotly figure object
         """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'builder', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "builder", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **params.pop("plotly_kwargs"),
         )
-        builder = BarLineAreaBuilder('bar')
-        params['data_frame'] = self._df
+        builder = BarLineAreaBuilder("bar")
+        params["data_frame"] = self._df
         # Update params with merged settings
-        params['plotly_kwargs'] = merged_plotly_kwargs
+        params["plotly_kwargs"] = merged_plotly_kwargs
         return builder.build(**params)
 
     def line(
@@ -222,26 +266,29 @@ class FrameOnPlots:
         color: Optional[Union[str, List, pd.Series]] = None,
         category_orders: Optional[Dict[str, Union[str, List[str]]]] = None,
         labels: Optional[Dict[str, str]] = None,
-        agg_func: Optional[Literal['mean', 'median', 'sum', 'count', 'nunique']] = None,
+        agg_func: Optional[Literal["mean", "median", "sum", "count", "nunique"]] = None,
         freq: Optional[str] = None,
         agg_column: Optional[str] = None,
-        norm_by: Optional[Union[str, Literal['all']]] = None,
+        norm_by: Optional[Union[str, Literal["all"]]] = None,
         trim_top_n_x: Optional[int] = None,
         trim_top_n_y: Optional[int] = None,
         trim_top_n_color: Optional[int] = None,
         trim_top_n_facet_col: Optional[int] = None,
         trim_top_n_facet_row: Optional[int] = None,
         trim_top_n_animation_frame: Optional[int] = None,
-        trim_top_n_direction: Literal['top', 'bottom'] = 'top',
-        trim_top_n_agg_func: Literal['mean', 'median', 'sum', 'count', 'nunique'] = 'count',
+        trim_top_n_direction: Literal["top", "bottom"] = "top",
+        trim_top_n_agg_func: Literal[
+            "mean", "median", "sum", "count", "nunique"
+        ] = "count",
         show_group_size: bool = True,
         min_group_size: Optional[int] = None,
         show_legend_title: bool = False,
         observed_for_groupby: bool = True,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
-        Creates a line chart using the Plotly Express library. This function is a wrapper around Plotly Express line and accepts all the same parameters, allowing for additional customization and functionality.
+        Creates a line chart using the Plotly Express library. This function is a wrapper around Plotly Express line
+        and accepts all the same parameters, allowing for additional customization and functionality.
 
         Parameters:
         -----------
@@ -259,14 +306,14 @@ class FrameOnPlots:
             Resample frequency for resample. Options: 'ME', 'W', D' and others
         category_orders : dict, optional
             Specifies the order of categories for different dimensions.
-            
+
             Keys should be column names, values can be either:
-            
+
             - A list of category values in desired order
             - A string specifying sorting method:
 
             For non-aggregated data (agg_mode=None):
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'count ascending/descending': Sort by count of values
             - 'min ascending/descending': Sort by minimum value
@@ -276,32 +323,39 @@ class FrameOnPlots:
             - 'median ascending/descending': Sort by median value
 
             For aggregated data (agg_mode='groupby' or 'resample'):
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'ascending/descending': Sort by aggregated value
 
             Examples:
-            
+
                 - {'city': 'count descending'}  # Sort cities by count of values
                 - {'product': ['A', 'B', 'C']}  # Manual order
                 - {'month': 'category ascending'}  # Alphabetical order
-                
+
         labels : dict, optional
             A dictionary mapping column names to their display names.
         norm_by: str, optional
-            The name of the column to normalize by. If set to 'all', normalization will be performed based on the sum of all values in the dataset.
+            The name of the column to normalize by. If set to 'all', normalization will be performed based
+            on the sum of all values in the dataset.
         trim_top_n_x : int, optional
-            Only for aggregation mode. The number of top categories x axis to include in the chart. For top using num column and agg_func.
+            Only for aggregation mode. The number of top categories x axis to include in the chart.
+            For top using num column and agg_func.
         trim_top_n_y : int, optional
-            Only for aggregation mode. The number of top categories y axis to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories y axis to include in the chart.
+            For top using num column and agg_func
         trim_top_n_color : int, optional
-            Only for aggregation mode. The number of top categories legend to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories legend to include in the chart.
+            For top using num column and agg_func
         trim_top_n_facet_col : int, optional
-            Only for aggregation mode. The number of top categories in facet_col to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in facet_col to include in the chart.
+            For top using num column and agg_func
         trim_top_n_facet_row : int, optional
-            Only for aggregation mode. The number of top categories in facet_row to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in facet_row to include in the chart.
+            For top using num column and agg_func
         trim_top_n_animation_frame : int, optional
-            Only for aggregation mode. The number of top categories in animation_frame to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in animation_frame to include in the chart.
+            For top using num column and agg_func
         trim_top_n_direction : str, optional
             Trim from bottom or from top. Default is 'top'
         trim_top_n_agg_func : str, optional
@@ -323,23 +377,27 @@ class FrameOnPlots:
             default False
         plotly_kwargs
             Additional keyword arguments to pass to the Plotly Express function. Default is None
-            
+
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object       
+            Interactive Plotly figure object
         """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'builder', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "builder", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **params.pop("plotly_kwargs"),
         )
-        builder = BarLineAreaBuilder('line')
-        params['data_frame'] = self._df
+        builder = BarLineAreaBuilder("line")
+        params["data_frame"] = self._df
         # Update params with merged settings
-        params['plotly_kwargs'] = merged_plotly_kwargs
+        params["plotly_kwargs"] = merged_plotly_kwargs
         return builder.build(**params)
 
     def area(
@@ -349,26 +407,29 @@ class FrameOnPlots:
         color: Optional[Union[str, List, pd.Series]] = None,
         category_orders: Optional[Dict[str, Union[str, List[str]]]] = None,
         labels: Optional[Dict[str, str]] = None,
-        agg_func: Optional[Literal['mean', 'median', 'sum', 'count', 'nunique']] = None,
+        agg_func: Optional[Literal["mean", "median", "sum", "count", "nunique"]] = None,
         freq: Optional[str] = None,
         agg_column: Optional[str] = None,
-        norm_by: Optional[Union[str, Literal['all']]] = None,
+        norm_by: Optional[Union[str, Literal["all"]]] = None,
         trim_top_n_x: Optional[int] = None,
         trim_top_n_y: Optional[int] = None,
         trim_top_n_color: Optional[int] = None,
         trim_top_n_facet_col: Optional[int] = None,
         trim_top_n_facet_row: Optional[int] = None,
         trim_top_n_animation_frame: Optional[int] = None,
-        trim_top_n_direction: Literal['top', 'bottom'] = 'top',
-        trim_top_n_agg_func: Literal['mean', 'median', 'sum', 'count', 'nunique'] = 'count',
+        trim_top_n_direction: Literal["top", "bottom"] = "top",
+        trim_top_n_agg_func: Literal[
+            "mean", "median", "sum", "count", "nunique"
+        ] = "count",
         show_group_size: bool = True,
         min_group_size: Optional[int] = None,
         show_legend_title: bool = False,
         observed_for_groupby: bool = True,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
-        Creates an area chart using the Plotly Express library. This function is a wrapper around Plotly Express area and accepts all the same parameters, allowing for additional customization and functionality.
+        Creates an area chart using the Plotly Express library. This function is a wrapper around Plotly Express area
+        and accepts all the same parameters, allowing for additional customization and functionality.
 
         Parameters:
         -----------
@@ -386,14 +447,14 @@ class FrameOnPlots:
             Resample frequency for resample. Options: 'ME', 'W', D' and others
         category_orders : dict, optional
             Specifies the order of categories for different dimensions.
-            
+
             Keys should be column names, values can be either:
-            
+
             - A list of category values in desired order
             - A string specifying sorting method:
 
             For non-aggregated data (agg_mode=None):
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'count ascending/descending': Sort by count of values
             - 'min ascending/descending': Sort by minimum value
@@ -403,7 +464,7 @@ class FrameOnPlots:
             - 'median ascending/descending': Sort by median value
 
             For aggregated data (agg_mode='groupby' or 'resample'):
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'ascending/descending': Sort by aggregated value
 
@@ -411,23 +472,30 @@ class FrameOnPlots:
                 - {'city': 'count descending'}  # Sort cities by count of values
                 - {'product': ['A', 'B', 'C']}  # Manual order
                 - {'month': 'category ascending'}  # Alphabetical order
-                
+
         labels : dict, optional
             A dictionary mapping column names to their display names.
         norm_by: str, optional
-            The name of the column to normalize by. If set to 'all', normalization will be performed based on the sum of all values in the dataset.
+            The name of the column to normalize by. If set to 'all', normalization will be performed based
+            on the sum of all values in the dataset.
         trim_top_n_x : int, optional
-            Only for aggregation mode. The number of top categories x axis to include in the chart. For top using num column and agg_func.
+            Only for aggregation mode. The number of top categories x axis to include in the chart.
+            For top using num column and agg_func.
         trim_top_n_y : int, optional
-            Only for aggregation mode. The number of top categories y axis to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories y axis to include in the chart.
+            For top using num column and agg_func
         trim_top_n_color : int, optional
-            Only for aggregation mode. The number of top categories legend to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories legend to include in the chart.
+            For top using num column and agg_func
         trim_top_n_facet_col : int, optional
-            Only for aggregation mode. The number of top categories in facet_col to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in facet_col to include in the chart.
+            For top using num column and agg_func
         trim_top_n_facet_row : int, optional
-            Only for aggregation mode. The number of top categories in facet_row to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in facet_row to include in the chart.
+            For top using num column and agg_func
         trim_top_n_animation_frame : int, optional
-            Only for aggregation mode. The number of top categories in animation_frame to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories in animation_frame to include in the chart.
+            For top using num column and agg_func
         trim_top_n_direction : str, optional
             Trim from bottom or from top. Default is 'top'
         trim_top_n_agg_func : str, optional
@@ -453,24 +521,28 @@ class FrameOnPlots:
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object         
+            Interactive Plotly figure object
         """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'builder', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "builder", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **params.pop("plotly_kwargs"),
         )
-        builder = BarLineAreaBuilder('area')
-        params['data_frame'] = self._df
+        builder = BarLineAreaBuilder("area")
+        params["data_frame"] = self._df
         # Update params with merged settings
-        params['plotly_kwargs'] = merged_plotly_kwargs
+        params["plotly_kwargs"] = merged_plotly_kwargs
         return builder.build(**params)
 
     def box(
         self,
-        x: str= None,
+        x: str = None,
         y: str = None,
         color: Optional[str] = None,
         lower_quantile: Optional[Union[float, int]] = None,
@@ -484,15 +556,18 @@ class FrameOnPlots:
         trim_top_n_facet_col: Optional[int] = None,
         trim_top_n_facet_row: Optional[int] = None,
         trim_top_n_animation_frame: Optional[int] = None,
-        trim_top_n_direction: Literal['top', 'bottom'] = 'top',
-        trim_top_n_agg_func: Literal['mean', 'median', 'sum', 'count', 'nunique'] = 'count',
-        mode: Literal['base', 'time_series'] = 'base',
+        trim_top_n_direction: Literal["top", "bottom"] = "top",
+        trim_top_n_agg_func: Literal[
+            "mean", "median", "sum", "count", "nunique"
+        ] = "count",
+        mode: Literal["base", "time_series"] = "base",
         freq: Optional[str] = None,
         show_legend_title: bool = False,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
-        Creates a box plot using Plotly Express.  This function is a wrapper around Plotly Express box and accepts all the same parameters, allowing for additional customization and
+        Creates a box plot using Plotly Express.  This function is a wrapper around Plotly Express box
+        and accepts all the same parameters, allowing for additional customization and
 
         Parameters:
         -----------
@@ -510,14 +585,14 @@ class FrameOnPlots:
 
         category_orders : dict, optional
             Specifies the order of categories for different dimensions.
-            
+
             Keys should be column names, values can be either:
-            
+
             - A list of category values in desired order
             - A string specifying sorting method:
 
             Can be one of:
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'count ascending/descending': Sort by count of values
             - 'min ascending/descending': Sort by minimum value
@@ -563,14 +638,14 @@ class FrameOnPlots:
             Aggregation function for top_n_trim. Options: 'mean', 'median', 'sum', 'count', 'nunique'
             By default trim_top_n_agg_func = 'count'
         mode : str, optional
-            The mode of the box plot construction. Available options are:   
-            
+            The mode of the box plot construction. Available options are:
+
                 - 'base': Standard box plot mode. This is the default behavior, where the box plot is created
-                
+
             directly from the provided data without any temporal aggregation.
-            
+
                 - 'time_series': Temporal box plot mode. This mode aggregates the data based on a specified time
-                
+
             column and granularity (e.g., months). It ensures that all time intervals are included in the
             plot, even if there is no data for some intervals. Requires the `time_column` parameter to be
             specified.
@@ -579,9 +654,9 @@ class FrameOnPlots:
         freq : str, optional
             The frequency for temporal aggregation in 'time_box' mode. This parameter is only used when
             `mode='time_box'`. It defines how the time data is grouped (e.g., by months, days, etc.).
-            
+
             Common values include:
-            
+
             - 'D' for days
             - 'W' for weeks
             - 'M' for months
@@ -596,19 +671,23 @@ class FrameOnPlots:
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object         
+            Interactive Plotly figure object
         """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'builder', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "builder", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **params.pop("plotly_kwargs"),
         )
-        builder = DistributionPlotBuilder('box')
-        params['data_frame'] = self._df
+        builder = DistributionPlotBuilder("box")
+        params["data_frame"] = self._df
         # Update params with merged settings
-        params['plotly_kwargs'] = merged_plotly_kwargs
+        params["plotly_kwargs"] = merged_plotly_kwargs
         return builder.build(**params)
 
     def violin(
@@ -627,15 +706,18 @@ class FrameOnPlots:
         trim_top_n_facet_col: Optional[int] = None,
         trim_top_n_facet_row: Optional[int] = None,
         trim_top_n_animation_frame: Optional[int] = None,
-        trim_top_n_direction: Literal['top', 'bottom'] = 'top',
-        trim_top_n_agg_func: Literal['mean', 'median', 'sum', 'count', 'nunique'] = 'count',
-        mode: Literal['base', 'time_series'] = 'base',
+        trim_top_n_direction: Literal["top", "bottom"] = "top",
+        trim_top_n_agg_func: Literal[
+            "mean", "median", "sum", "count", "nunique"
+        ] = "count",
+        mode: Literal["base", "time_series"] = "base",
         freq: Optional[str] = None,
         show_legend_title: bool = False,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
-        Creates a violin plot using Plotly Express.  This function is a wrapper around Plotly Express violin and accepts all the same parameters, allowing for additional customization and
+        Creates a violin plot using Plotly Express.  This function is a wrapper around Plotly Express violin
+        and accepts all the same parameters, allowing for additional customization and
 
         Parameters:
         -----------
@@ -653,14 +735,14 @@ class FrameOnPlots:
 
         category_orders : dict, optional
             Specifies the order of categories for different dimensions.
-            
+
             Keys should be column names, values can be either:
-            
+
             - A list of category values in desired order
             - A string specifying sorting method:
 
             Can be one of:
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'count ascending/descending': Sort by count of values
             - 'min ascending/descending': Sort by minimum value
@@ -698,13 +780,13 @@ class FrameOnPlots:
             By default trim_top_n_agg_func = 'count'
         mode : str, optional
             The mode of the box plot construction. Available options are:
-            
+
                 - 'base': Standard box plot mode. This is the default behavior, where the box plot is created
-                
+
             directly from the provided data without any temporal aggregation.
-            
+
                 - 'time_series': Temporal box plot mode. This mode aggregates the data based on a specified time
-                
+
             column and granularity (e.g., months). It ensures that all time intervals are included in the
             plot, even if there is no data for some intervals. Requires the `time_column` parameter to be
             specified.
@@ -713,9 +795,9 @@ class FrameOnPlots:
         freq : str, optional
             The frequency for temporal aggregation in 'time_box' mode. This parameter is only used when
             `mode='time_box'`. It defines how the time data is grouped (e.g., by months, days, etc.).
-            
+
             Common values include:
-            
+
             - 'D' for days
             - 'W' for weeks
             - 'M' for months
@@ -726,23 +808,27 @@ class FrameOnPlots:
             Whether to show legend title. Default is False
         plotly_kwargs
             Additional keyword arguments to pass to the Plotly Express function. Default is None
-            
+
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object             
+            Interactive Plotly figure object
         """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'builder', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "builder", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **params.pop("plotly_kwargs"),
         )
-        builder = DistributionPlotBuilder('violin')
-        params['data_frame'] = self._df
+        builder = DistributionPlotBuilder("violin")
+        params["data_frame"] = self._df
         # Update params with merged settings
-        params['plotly_kwargs'] = merged_plotly_kwargs
+        params["plotly_kwargs"] = merged_plotly_kwargs
         return builder.build(**params)
 
     def heatmap(
@@ -755,12 +841,14 @@ class FrameOnPlots:
         hide_first_column: bool = False,
         trim_top_n_x: Optional[int] = None,
         trim_top_n_y: Optional[int] = None,
-        trim_top_n_direction: Literal['top', 'bottom'] = 'top',
-        trim_top_n_agg_func: Literal['mean', 'median', 'sum', 'count', 'nunique'] = 'count',
+        trim_top_n_direction: Literal["top", "bottom"] = "top",
+        trim_top_n_agg_func: Literal[
+            "mean", "median", "sum", "count", "nunique"
+        ] = "count",
         category_orders: Optional[Dict[str, Union[str, List[str]]]] = None,
         labels: Optional[Dict[str, str]] = None,
         fill_value: Optional[Union[int, float]] = None,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
         Creates an enhanced heatmap visualization with support for data aggregation,
@@ -782,59 +870,68 @@ class FrameOnPlots:
         hide_first_column : bool, default False
             Whether to skip first column in cohort analysis or other cases
         trim_top_n_x : int, optional
-            Only for aggregation mode. The number of top categories x axis to include in the chart. For top using num column and agg_func.
+            Only for aggregation mode. The number of top categories x axis to include in the chart.
+            For top using num column and agg_func.
         trim_top_n_y : int, optional
-            Only for aggregation mode. The number of top categories y axis to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories y axis to include in the chart.
+            For top using num column and agg_func
         trim_top_n_direction : str, optional
             Trim from bottom or from top. Default is 'top'
         trim_top_n_agg_func : str, default 'count'
             Aggregation function for top-N filtering
         category_orders : dict, optional
             Specifies order of categories on axes. Keys can be 'x' or 'y',
-            
+
             values can be:
-            
+
             - List of categories in desired order
             - String specifying sorting method:
-            
+
                 * 'category ascending/descending' - alphabetical
                 * 'count ascending/descending' - by value count
                 * 'sum/mean/median/min/max ascending/descending' - by aggregated value
 
         labels : dict with str keys and str values (default {})
-            Sets names used in the figure for axis titles (keys x and y), colorbar title and hoverlabel (key color). The values should correspond to the desired label to be displayed. If img is an xarray, dimension names are used for axis titles, and long name for the colorbar title
+            Sets names used in the figure for axis titles (keys x and y), colorbar title and hoverlabel (key color).
+            The values should correspond to the desired label to be displayed.
+            If img is an xarray, dimension names are used for axis titles, and long name for the colorbar title
             (unless overridden in labels). Possible keys are: x, y, and color.
         fill_value : int, float, default None
-            fill_value for pd.pivot_table. Value to replace missing values with (in the resulting pivot table, after aggregation).
+            fill_value for pd.pivot_table. Value to replace missing values with (in the resulting pivot table,
+            after aggregation).
         plotly_kwargs
             Additional keyword arguments to pass to the Plotly Express function. Default is None
 
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object    
+            Interactive Plotly figure object
         """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'builder', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "builder", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **params.pop("plotly_kwargs"),
         )
         builder = HeatmapBuilder()
-        params['data_frame'] = self._df
+        params["data_frame"] = self._df
         # Update params with merged settings
-        params['plotly_kwargs'] = merged_plotly_kwargs
+        params["plotly_kwargs"] = merged_plotly_kwargs
         return builder.build(**params)
 
     def pairplot(
         self,
         pairs: Union[List[str], List[Tuple[str, str]]] = None,
         ranges: Optional[Dict[str, Tuple[float, float]]] = None,
-        color_mode: Optional[Literal['count', 'kde', 'category']] = None,
+        color_mode: Optional[Literal["count", "kde", "category"]] = None,
         color_column: Optional[str] = None,
-        display_mode: str = 'scatter',
-        correlation_method: str = 'pearson',
+        display_mode: str = "scatter",
+        correlation_method: str = "pearson",
         transforms: Optional[Union[str, Dict[str, str]]] = None,
         show_correlation: bool = True,
         width: Optional[int] = None,
@@ -852,10 +949,12 @@ class FrameOnPlots:
         plot_bgcolor: Optional[str] = None,
         title: Optional[str] = None,
         show_legend_title: bool = False,
-        color_continuous_scale: Union[str, List[str]] = 'viridis',
+        color_continuous_scale: Union[str, List[str]] = "viridis",
         color_discrete_sequence: Optional[List[str]] = None,
-        renderer: str = 'jpg'
-    ) -> Union[Union[None, CustomFigure], Union[Generator[CustomFigure, None, None], None]]:
+        renderer: str = "jpg",
+    ) -> Union[
+        Union[None, CustomFigure], Union[Generator[CustomFigure, None, None], None]
+    ]:
         """
         Create an advanced pairplot of numerical variables with multiple display options.
 
@@ -863,14 +962,14 @@ class FrameOnPlots:
         -----------
         pairs: Union[List[str], List[Tuple[str, str]], optional
             Specifies which column pairs to plot. Can be one of:
-            
+
             - None: plots all pairwise combinations of numeric columns
             - List of column names (all pairwise combinations will be plotted)
-            
+
               Example: ['col1', 'col2', 'col3']
-              
+
             - List of explicit pairs to plot
-            
+
               Example: [('col1', 'col2'), ('col1', 'col3')]
 
         ranges : Dict[str, Tuple[Optional[float], Optional[float]]], optional
@@ -880,7 +979,7 @@ class FrameOnPlots:
 
         color_mode : Literal['count', 'kde', 'category'], optional
             Coloring mode for points:
-            
+
             - 'count' - color by point density (bin counting)
             - 'kde' - color by kernel density estimation
             - 'category' - color by values in color_column
@@ -922,11 +1021,16 @@ class FrameOnPlots:
             Number of plots per page when using generator mode
         trendline : str, optional
             One of 'ols', 'lowess', 'rolling', 'expanding' or 'ewm'.
-            If 'ols', an Ordinary Least Squares regression line will be drawn for each discrete-color/symbol group.
-            If 'lowess’, a Locally Weighted Scatterplot Smoothing line will be drawn for each discrete-color/symbol group.
-            If 'rolling’, a Rolling (e.g. rolling average, rolling median) line will be drawn for each discrete-color/symbol group.
-            If 'expanding’, an Expanding (e.g. expanding average, expanding sum) line will be drawn for each discrete-color/symbol group.
-            If 'ewm’, an Exponentially Weighted Moment (e.g. exponentially-weighted moving average) line will be drawn for each discrete-color/symbol group.
+            If 'ols', an Ordinary Least Squares regression line will be drawn
+            for each discrete-color/symbol group.
+            If 'lowess’, a Locally Weighted Scatterplot Smoothing line will be drawn
+            for each discrete-color/symbol group.
+            If 'rolling’, a Rolling (e.g. rolling average, rolling median) line will be drawn
+            for each discrete-color/symbol group.
+            If 'expanding’, an Expanding (e.g. expanding average, expanding sum) line will be drawn
+            for each discrete-color/symbol group.
+            If 'ewm’, an Exponentially Weighted Moment (e.g. exponentially-weighted moving average)
+            line will be drawn for each discrete-color/symbol group.
         plot_bgcolor : str, optional
             Sets the background color of the plotting area in-between x and y axes.
         show_legend_title : bool, optional
@@ -934,34 +1038,34 @@ class FrameOnPlots:
 
         color_continuous_scale: Union[str, List[str]] = 'viridis'
             Color scale to use for continuous coloring (when color_mode is 'count' or 'kde').
-            
+
             Can be either:
-            
+
             - Name of a Plotly continuous color scale
                 ('viridis', 'plasma', 'inferno', 'magma', 'cividis')
             - List of colors defining a custom color scale
-            
+
             Default: 'viridis'
 
         color_discrete_sequence: Optional[Union[str, List[str]]] = None
             Color sequence to use for categorical coloring (when color_mode='category').
-            
+
             Can be either:
-            
+
             - Name of a Plotly qualitative color sequence
                 px.colors.qualitative.G10
             - List of colors defining a custom discrete sequence
-            
+
             When None, uses default Plotly qualitative palette.
         renderer : str, optional
             The Plotly renderer to use for displaying the figure. Common options include:
-            
+
             - 'browser': Opens plot in default web browser
             - 'notebook': Renders plot in Jupyter notebook output
             - 'png': Static PNG image
             - 'svg': Static SVG image
             - 'json': Returns figure as JSON string
-            
+
             If None, uses Plotly's default renderer.
             See Plotly documentation for full list of available renderers.
 
@@ -971,16 +1075,19 @@ class FrameOnPlots:
             Either a single Plotly figure or a generator of Plotly figures
         """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'builder', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "builder", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels')
+            category_orders=params.pop("category_orders"), labels=params.pop("labels")
         )
         builder = PairplotBuilder()
-        params['data_frame'] = self._df
+        params["data_frame"] = self._df
         # Update params with merged settings
-        params['category_orders'] = merged_plotly_kwargs.pop('category_orders')
-        params['labels'] = merged_plotly_kwargs.pop('labels')
+        params["category_orders"] = merged_plotly_kwargs.pop("category_orders")
+        params["labels"] = merged_plotly_kwargs.pop("labels")
         return builder.build(**params)
 
     def plot_ci(
@@ -989,8 +1096,8 @@ class FrameOnPlots:
         cat_col: str,
         color: Optional[str] = None,
         alpha: float = 0.05,
-        orientation: str = 'v',
-        legend_position: str = 'top',
+        orientation: str = "v",
+        legend_position: str = "top",
         title: str = None,
         labels: Optional[Dict[str, str]] = None,
         category_orders: Optional[Dict[str, list]] = None,
@@ -1002,7 +1109,7 @@ class FrameOnPlots:
         error_bar_width: int = 10,
         group_spacing: float = 0.3,
         show_legend_title: bool = False,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
         Creates a plot with mean values and confidence intervals using t-statistics.
@@ -1057,43 +1164,48 @@ class FrameOnPlots:
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object    
+            Interactive Plotly figure object
         """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels')
+            category_orders=params.pop("category_orders"), labels=params.pop("labels")
         )
         # Update params with merged settings
-        params['category_orders'] = merged_plotly_kwargs.pop('category_orders')
-        params['labels'] = merged_plotly_kwargs.pop('labels')
+        params["category_orders"] = merged_plotly_kwargs.pop("category_orders")
+        params["labels"] = merged_plotly_kwargs.pop("labels")
         return create_plot_ci(data_frame=self._df, **params)
-    
+
     def pie_bar(
         self,
         x: str,
         y: str,
-        agg_func: Literal['mean', 'median', 'sum', 'count', 'nunique'] = 'count',
+        agg_func: Literal["mean", "median", "sum", "count", "nunique"] = "count",
         agg_column: Optional[str] = None,
         category_orders: Optional[Dict[str, Union[str, List[str]]]] = None,
         labels: Optional[Dict[str, str]] = None,
         trim_top_n_x: Optional[int] = None,
         trim_top_n_y: Optional[int] = None,
-        trim_top_n_direction: Literal['top', 'bottom'] = 'top',
-        trim_top_n_agg_func: Literal['mean', 'median', 'sum', 'count', 'nunique'] = 'count',
-        norm_by: Optional[Union[str, Literal['all']]] = None,
+        trim_top_n_direction: Literal["top", "bottom"] = "top",
+        trim_top_n_agg_func: Literal[
+            "mean", "median", "sum", "count", "nunique"
+        ] = "count",
+        norm_by: Optional[Union[str, Literal["all"]]] = None,
         sort_by: Optional[str] = None,
         show_group_size: bool = True,
         min_group_size: Optional[int] = None,
         observed_for_groupby: bool = True,
         hole: float = None,
-        label_for_others_in_pie: str = 'others',
-        pie_textinfo: str = 'percent',
-        agg_func_for_pie_others: str = 'sum',
+        label_for_others_in_pie: str = "others",
+        pie_textinfo: str = "percent",
+        agg_func_for_pie_others: str = "sum",
         pull: Optional[int] = None,
         horizontal_spacing: Optional[float] = 0.15,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
         Creates a combined pie and bar chart visualization.
@@ -1113,14 +1225,14 @@ class FrameOnPlots:
             Column to aggregate
         category_orders : dict, optional
             Specifies the order of categories for different dimensions.
-            
+
             Keys should be column names, values can be either:
-            
+
             - A list of category values in desired order
             - A string specifying sorting method:
 
             For non-aggregated data (agg_mode=None):
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'count ascending/descending': Sort by count of values
             - 'min ascending/descending': Sort by minimum value
@@ -1130,7 +1242,7 @@ class FrameOnPlots:
             - 'median ascending/descending': Sort by median value
 
             For aggregated data (agg_mode='groupby' or 'resample'):
-            
+
             - 'category ascending/descending': Alphabetical order
             - 'ascending/descending': Sort by aggregated value
 
@@ -1138,17 +1250,21 @@ class FrameOnPlots:
                 - {'city': 'count descending'}  # Sort cities by count of values
                 - {'product': ['A', 'B', 'C']}  # Manual order
                 - {'month': 'category ascending'}  # Alphabetical order
-                
+
         labels : dict, optional
             A dictionary mapping column names to their display names.
         trim_top_n_x : int, optional
-            Only for aggregation mode. The number of top categories x axis to include in the chart. For top using num column and agg_func.
+            Only for aggregation mode. The number of top categories x axis to include in the chart.
+            For top using num column and agg_func.
         trim_top_n_y : int, optional
-            Only for aggregation mode. The number of top categories y axis to include in the chart. For top using num column and agg_func
+            Only for aggregation mode. The number of top categories y axis to include in the chart.
+            For top using num column and agg_func
         norm_by: str, optional
-            The name of the column to normalize by. If set to 'all', normalization will be performed based on the sum of all values in the dataset.
+            The name of the column to normalize by. If set to 'all', normalization will be performed based
+            on the sum of all values in the dataset.
         sort_by : str, optional
-            Specifies which column to use for sorting when both x and y are numeric and in category_orders use string parameter for sorting
+            Specifies which column to use for sorting when both x and y are numeric and in category_orders
+            use string parameter for sorting
         show_group_size : bool, optional
             Whether to show the group size (only for groupby mode). Default is False
         min_group_size : int, optional
@@ -1174,36 +1290,43 @@ class FrameOnPlots:
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object       
+            Interactive Plotly figure object
         """
-        params = {k: v for k, v in locals().items() if k not in [None, 'plotly_kwargs', 'x', 'y', 'self', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k
+            not in [None, "plotly_kwargs", "x", "y", "self", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **plotly_kwargs
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **plotly_kwargs,
         )
         update_kwargs = {
-            'x': x,
-            'y': y,
+            "x": x,
+            "y": y,
         }
-        update_kwargs = {k: v for k,v in update_kwargs.items() if v is not None}
+        update_kwargs = {k: v for k, v in update_kwargs.items() if v is not None}
         merged_plotly_kwargs.update(**update_kwargs)
-        return create_pie_bar(data_frame=self._df, **params, plotly_kwargs=merged_plotly_kwargs)
+        return create_pie_bar(
+            data_frame=self._df, **params, plotly_kwargs=merged_plotly_kwargs
+        )
 
     def qqplot(
         self,
         x: str,
         show_skew_curt: bool = True,
-        point_color: str = 'rgba(40, 115, 168, 0.9)',
-        line_color: str = 'rgba(226, 85, 89, 0.9)',
+        point_color: str = "rgba(40, 115, 168, 0.9)",
+        line_color: str = "rgba(226, 85, 89, 0.9)",
         point_size: int = 8,
         line_width: int = 2,
-        title: str = 'Q-Q Plot',
+        title: str = "Q-Q Plot",
         width: int = 500,
         height: int = 400,
         show_grid: bool = True,
-        reference_line: str = '45',
-        renderer: str = 'png'
+        reference_line: str = "45",
+        renderer: str = "png",
     ) -> Union[CustomFigure, None]:
         """
         Create an interactive Q-Q plot using Plotly with enhanced functionality.
@@ -1239,13 +1362,13 @@ class FrameOnPlots:
             'r' for regression line, or None for no line) (default '45')
         renderer : str, optional
             The Plotly renderer to use for displaying the figure. Common options include:
-            
+
             - 'browser': Opens plot in default web browser
             - 'notebook': Renders plot in Jupyter notebook output
             - 'png': Static PNG image
             - 'svg': Static SVG image
             - 'json': Returns figure as JSON string
-            
+
             If None, uses Plotly's default renderer.
             See Plotly documentation for full list of available renderers.
 
@@ -1262,9 +1385,9 @@ class FrameOnPlots:
             If input is not a valid array-like object
         """
         if x not in self._df.columns:
-            raise ValueError(f'{x} not found in DataFrame')
-        params = {k: v for k, v in locals().items() if k not in ['self', 'x']}
-        return create_qqplot(x = self._df[x], **params)
+            raise ValueError(f"{x} not found in DataFrame")
+        params = {k: v for k, v in locals().items() if k not in ["self", "x"]}
+        return create_qqplot(x=self._df[x], **params)
 
     def histogram(
         self,
@@ -1274,38 +1397,47 @@ class FrameOnPlots:
         labels: Optional[Dict[str, str]] = None,
         lower_quantile: Optional[Union[float, int]] = None,
         upper_quantile: Optional[Union[float, int]] = None,
-        mode: Literal['base', 'dual_hist_trim', 'dual_box_trim', 'dual_hist_qq'] = 'base',
+        mode: Literal[
+            "base", "dual_hist_trim", "dual_box_trim", "dual_hist_qq"
+        ] = "base",
         show_kde: bool = False,
         show_hist: bool = True,
         show_box: bool = True,
-        legend_position: str = 'top',
+        legend_position: str = "top",
         show_legend_title: bool = False,
         renderer: str = None,
         xaxis_type: str = None,
-        yaxis_type: str = None,        
-        **plotly_kwargs
+        yaxis_type: str = None,
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
-        Creates a histogram chart using the Plotly Express library. This function is a wrapper around Plotly Express histogram and accepts all the same parameters, allowing for additional customization and functionality.
+        Creates a histogram chart using the Plotly Express library. This function is a wrapper around
+        Plotly Express histogram and accepts all the same parameters,
+        allowing for additional customization and functionality.
 
         Parameters:
         -----------
         mode : str, optional
             Specifies the type of visualization to be displayed. Available options are:
-            
+
             - 'base': Display simple histogram
             - 'dual_hist_trim': Displays a dual plot with the original histogram on the left
-                                and a trimmed histogram (based on quantiles) on the right.
+
+            and a trimmed histogram (based on quantiles) on the right.
+
             - 'dual_box_trim': Displays a dual plot with a boxplot on the left and a trimmed
-                            histogram (based on quantiles) on the right.
+
+            histogram (based on quantiles) on the right.
+
             - 'dual_hist_qq': Displays a dual plot with the original histogram on the left
-                            and a QQ-plot on the right.
-                            
+
+            and a QQ-plot on the right.
+
             Default is 'base'.
 
         category_orders : dict, optional
             Specifies the order of categories for different dimensions.
-        
+
         labels : dict, optional
             A dictionary mapping column names to their display names.
 
@@ -1314,23 +1446,38 @@ class FrameOnPlots:
         upper_quantile : float, optional
             The upper quantile for data filtering (default is 1).
         x : str, optional
-            The name of the column in `data_frame` to be used for the x-axis. If not provided, the function will attempt to use the first column.
+            The name of the column in `data_frame` to be used for the x-axis.
+            If not provided, the function will attempt to use the first column.
         y : str, optional
-            The name of the column in `data_frame` to be used for the y-axis. If not provided, the function will count occurrences.
+            The name of the column in `data_frame` to be used for the y-axis.
+            If not provided, the function will count occurrences.
         color : str, optional
-            The name of the column in `data_frame` to be used for color encoding. This will create a separate histogram for each unique value in this column.
+            The name of the column in `data_frame` to be used for color encoding.
+            This will create a separate histogram for each unique value in this column.
         barmode : str, optional
-            The mode for the bars in the histogram. Options include 'group', 'overlay', and 'relative'. Default is 'overlay'.
+            The mode for the bars in the histogram. Options include 'group',
+            'overlay', and 'relative'. Default is 'overlay'.
         nbins : int, optional
-            The number of bins to use for the histogram. If not specified, the function will automatically determine the number of bins.
+            The number of bins to use for the histogram. If not specified,
+            the function will automatically determine the number of bins.
         histnorm : str, optional
-            Normalization method for the histogram. Options include 'percent', 'probability', 'density', and 'probability density'. Default is None (no normalization).
+            Normalization method for the histogram. Options include 'percent', 'probability',
+            'density', and 'probability density'. Default is None (no normalization).
         barnorm : str, optional
             Specifies how to normalize the heights of the bars in the histogram. Possible values include:
-            
-            - 'fraction': normalizes the heights of the bars so that the sum of all heights equals 1 (fraction of the total count).
-            - 'percent': normalizes the heights of the bars so that the sum of all heights equals 100 (percentage of the total count).
-            - 'density': normalizes the heights of the bars so that the area under the histogram equals 1 (probability density).
+
+            - 'fraction': normalizes the heights of the bars so that the sum of all heights equals 1
+
+            (fraction of the total count).
+
+            - 'percent': normalizes the heights of the bars so that the sum of all heights equals 100
+
+            (percentage of the total count).
+
+            - 'density': normalizes the heights of the bars so that the area under the histogram equals 1
+
+            (probability density).
+
             - None: by default, the heights of the bars are not normalized.
 
         labels : dict, optional
@@ -1339,37 +1486,41 @@ class FrameOnPlots:
             Whether to show legend title. Default is False
         renderer : str, optional
             The Plotly renderer to use for displaying the figure. Common options include:
-            
+
             - 'browser': Opens plot in default web browser
             - 'notebook': Renders plot in Jupyter notebook output
             - 'png': Static PNG image
             - 'svg': Static SVG image
             - 'json': Returns figure as JSON string
-            
+
             If None, uses Plotly's default renderer.
             See Plotly documentation for full list of available renderers.
-            
+
         xaxis_type : str, optional
             Type of the X-axis ['-', 'linear', 'log', 'date', 'category', 'multicategory']
         yaxis_type : str, optional
-            Type of the Y-axis ['-', 'linear', 'log', 'date', 'category', 'multicategory']         
+            Type of the Y-axis ['-', 'linear', 'log', 'date', 'category', 'multicategory']
         plotly_kwargs
             Additional keyword arguments to pass to the Plotly Express function. Default is None
 
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object           
+            Interactive Plotly figure object
         """
         builder = HistogramBuilder()
-        params = {k: v for k, v in locals().items() if k not in ['builder', 'self', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["builder", "self", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
-        )        
-        params['plotly_kwargs'] = merged_plotly_kwargs
-        params['data_frame'] = self._df
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **params.pop("plotly_kwargs"),
+        )
+        params["plotly_kwargs"] = merged_plotly_kwargs
+        params["data_frame"] = self._df
         return builder.build(**params)
 
     def cat_compare(
@@ -1378,21 +1529,21 @@ class FrameOnPlots:
         cat2: str,
         trim_top_n_cat1: int = None,
         trim_top_n_cat2: int = None,
-        barmode: str = 'group',
+        barmode: str = "group",
         text_auto: bool | str = False,
         labels: dict = None,
         category_orders: dict = None,
         hover_name: str = None,
         hover_data: list | dict = None,
         return_figs: bool = False,
-        legend_position: str = 'top',
+        legend_position: str = "top",
         fig_layouts: list = None,
         heights: list = [400, 450, 450],
         width: int = 900,
         visible_graphs: list = [1, 2, 3],
         horizontal_spacing: Optional[float] = 0.1,
         bargroupgap: Optional[float] = None,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> Union[List[CustomFigure], None]:
         """
         Compare two categorical variables in a DataFrame and visualize the results.
@@ -1419,33 +1570,33 @@ class FrameOnPlots:
             Default is 'group'.
         text_auto : bool or str, optional
             Whether to automatically display text on bars. Can be:
-            
+
             - False: no text
             - True: show values
             - '.2f' etc: format string
-            
+
             Default is False.
         labels : dict, optional
             Dictionary for custom axis labels in format {column_name: label}.
         category_orders : dict, optional
             Specifies order of categories for different dimensions.
-            
+
             Keys should be column names, values can be:
-            
+
             - List of category values in desired order
             - String specifying sorting method:
-            
+
                 * For non-aggregated data:
-                
+
                     - 'category ascending/descending' (alphabetical)
                     - 'count ascending/descending' (by value count)
                     - 'min/max/sum/mean/median ascending/descending'
-                    
+
                 * For aggregated data:
-                
+
                     - 'ascending/descending' (by aggregated value)
                     - 'category ascending/descending' (alphabetical)
-                    
+
         hover_name : str, optional
             Column name to use as hover title.
         hover_data : list or dict, optional
@@ -1466,11 +1617,11 @@ class FrameOnPlots:
             Default is 900.
         visible_graphs : list, optional
             Which comparison panels to display (1, 2, and/or 3):
-            
+
             1 - Base distributions (cat1 and cat2 normalized to total count)
             2 - cat1 distribution by cat2 groups (row/column normalized)
             3 - cat2 distribution by cat1 groups (row/column normalized)
-            
+
             Default is [1, 2, 3] (show all).
         horizontal_spacing : float, optional
             Space between subplots (ratio of width).
@@ -1484,21 +1635,24 @@ class FrameOnPlots:
         --------
         list of CustomFigure or None
             If return_figs is True, returns list of Plotly figure objects.
-            Otherwise displays Plotly figures and returns None.       
+            Otherwise displays Plotly figures and returns None.
         """
-        params = {k: v for k, v in locals().items() if k not in ['builder', 'self', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["builder", "self", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels')
+            category_orders=params.pop("category_orders"), labels=params.pop("labels")
         )
-        params['category_orders'] = merged_plotly_kwargs.pop('category_orders')
-        params['labels'] = merged_plotly_kwargs.pop('labels')
+        params["category_orders"] = merged_plotly_kwargs.pop("category_orders")
+        params["labels"] = merged_plotly_kwargs.pop("labels")
         data_frame = self._df
-        cat1 = params.pop('cat1')
-        cat2 = params.pop('cat2')
+        cat1 = params.pop("cat1")
+        cat2 = params.pop("cat2")
         builder = CatCompareBuilder(data_frame, cat1, cat2)
         return builder.build(**params)
-    
+
     def wordcloud(
         self,
         text_column: str,
@@ -1506,13 +1660,13 @@ class FrameOnPlots:
         max_words: int = 100,
         width: int = 800,
         height: int = 400,
-        background_color: str = 'white',
-        colormap: Union[str, Colormap] = 'viridis',
+        background_color: str = "white",
+        colormap: Union[str, Colormap] = "viridis",
         margin: Optional[Union[int, Dict[str, int]]] = None,
         relative_scaling: float = 0.5,
         prefer_horizontal: float = 0.9,
         contour_width: int = 0,
-        contour_color: str = 'black',
+        contour_color: str = "black",
         random_state: Optional[int] = None,
         mask: Optional[np.ndarray] = None,
         stopwords: Optional[List[str]] = None,
@@ -1594,22 +1748,23 @@ class FrameOnPlots:
         fig_kwargs : Optional[Dict[str, Any]]
             Additional arguments to pass to go.Figure.
         scroll_zoom: bool
-            Only with return_fig = False. This option allows users to zoom in and out of figures using the scroll wheel on their mouse and/or a two-finger scroll.
+            Only with return_fig = False. This option allows users to zoom in and out of figures using
+            the scroll wheel on their mouse and/or a two-finger scroll.
         return_fig: bool
             Wheather to return plotly figure
 
         Returns:
         --------
         go.Figure
-            Plotly Figure object containing the word cloud visualization.     
+            Plotly Figure object containing the word cloud visualization.
         """
         if text_column not in self._df.columns:
-            raise ValueError(f'{text_column} not found in DataFrame')
-        params = {k: v for k, v in locals().items() if k not in ['text_column', 'self']}
-        params['text'] = ' '.join(self._df[text_column].dropna().astype(str))
+            raise ValueError(f"{text_column} not found in DataFrame")
+        params = {k: v for k, v in locals().items() if k not in ["text_column", "self"]}
+        params["text"] = " ".join(self._df[text_column].dropna().astype(str))
 
         return create_wordcloud_plotly(**params)
-    
+
     def parallel_categories(
         self,
         dimensions: list,
@@ -1621,11 +1776,11 @@ class FrameOnPlots:
         margin_r: int = 50,
         width: int = None,
         height: int = None,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> go.Figure:
         """
         Create a parallel categories plot with customizable colors and category filtering.
-        
+
         Parameters:
         -----------
         dimensions : list
@@ -1645,35 +1800,38 @@ class FrameOnPlots:
             If None, uses Plotly's default margin.
         margin_r : int, optional
             Right margin in pixels. Controls space on right of plot.
-            If None, uses Plotly's default margin.    
-        height int, optional 
+            If None, uses Plotly's default margin.
+        height int, optional
             Height of each figure.
         width int, optional
-            Width of each figure.        
+            Width of each figure.
         plotly_kwargs
             Additional arguments passed to px.parallel_categories()
-        
+
         Returns:
         --------
         go.Figure
-            Interactive Plotly figure object     
+            Interactive Plotly figure object
         """
 
-        params = {k: v for k, v in locals().items() if k not in [None,'self', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in [None, "self", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
+            labels=params.pop("labels"), **params.pop("plotly_kwargs")
         )
-        params['data_frame'] = self._df
-        params['plotly_kwargs'] = merged_plotly_kwargs
+        params["data_frame"] = self._df
+        params["plotly_kwargs"] = merged_plotly_kwargs
         return parallel_categories(**params)
-    
+
     def period_change(
         self,
         metric_col: str,
         date_col: str,
-        period: str = 'mom',
-        agg_func: Callable = 'sum',
+        period: str = "mom",
+        agg_func: Callable = "sum",
         facet_col: Optional[str] = None,
         facet_col_wrap: Optional[int] = None,
         facet_row: Optional[str] = None,
@@ -1682,11 +1840,11 @@ class FrameOnPlots:
         color_dict: Dict[str, str] = None,
         labels: Optional[Dict[str, str]] = None,
         category_orders: Optional[Dict[str, List]] = None,
-        **plotly_kwargs
+        **plotly_kwargs,
     ) -> CustomFigure:
         """
         Plot period-over-period changes for a given metric using pd.Grouper with enhanced customization.
-        
+
         Parameters:
         -----------
         metric_col : str
@@ -1694,13 +1852,13 @@ class FrameOnPlots:
         date_col : str
             Name of the datetime column
         period : str, optional
-            Period for change calculation: 
-            
-                - 'mom' - month over month, 
+            Period for change calculation:
+
+                - 'mom' - month over month,
                 - 'wow' - week over week,
                 - 'dod' - day over day,
                 - 'yoy' - year over year (default: 'mom')
-                
+
         agg_func : Callable, optional
             Aggregation function (default: 'sum')
         facet_col : str, optional
@@ -1722,20 +1880,24 @@ class FrameOnPlots:
             Custom ordering of categories
         plotly_kwargs : dict
             Additional keyword arguments passed to px.bar()
-            
+
         Returns
         -------
         CustomFigure
-            Interactive Plotly figure object                    
-        """    
+            Interactive Plotly figure object
+        """
         # Merge default and method-specific settings
-        params = {k: v for k, v in locals().items() if k not in ['self', 'merged_plotly_kwargs']}
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["self", "merged_plotly_kwargs"]
+        }
         merged_plotly_kwargs = self._merge_plotly_settings(
-            category_orders=params.pop('category_orders'),
-            labels=params.pop('labels'),
-            **params.pop('plotly_kwargs')
+            category_orders=params.pop("category_orders"),
+            labels=params.pop("labels"),
+            **params.pop("plotly_kwargs"),
         )
         # Update params with merged settings
-        params['plotly_kwargs'] = merged_plotly_kwargs      
-        params['df'] = self._df
-        return period_change(**params)          
+        params["plotly_kwargs"] = merged_plotly_kwargs
+        params["df"] = self._df
+        return period_change(**params)

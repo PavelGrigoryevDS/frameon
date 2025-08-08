@@ -1,8 +1,16 @@
-from typing import Optional, Union, List, Dict, Tuple, Callable, Any
+"""
+Interactive word cloud visualization utilities.
+
+This module provides tools for creating interactive word clouds using Plotly,
+with extensive customization options for text processing and visual styling.
+"""
+
+from typing import Any, Callable, Dict, List, Optional, Union
+
 import numpy as np
-from wordcloud import WordCloud
 import plotly.graph_objects as go
 from matplotlib.colors import Colormap
+from wordcloud import WordCloud
 
 
 def create_wordcloud_plotly(
@@ -11,13 +19,13 @@ def create_wordcloud_plotly(
     max_words: int = 100,
     width: int = 800,
     height: int = 400,
-    background_color: str = 'white',
-    colormap: Union[str, Colormap] = 'viridis',
+    background_color: str = "white",
+    colormap: Union[str, Colormap] = "viridis",
     margin: Optional[Union[int, Dict[str, int]]] = None,
     relative_scaling: float = 0.5,
     prefer_horizontal: float = 0.9,
     contour_width: int = 0,
-    contour_color: str = 'black',
+    contour_color: str = "black",
     random_state: Optional[int] = None,
     mask: Optional[np.ndarray] = None,
     stopwords: Optional[List[str]] = None,
@@ -35,7 +43,7 @@ def create_wordcloud_plotly(
     collocation_threshold: int = 30,
     return_fig: bool = False,
     scroll_zoom: bool = False,
-    plotly_kwargs: Optional[Dict[str, Any]] = None
+    plotly_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Union[go.Figure, None]:
     """
     Generate an interactive word cloud visualization using Plotly.
@@ -45,11 +53,11 @@ def create_wordcloud_plotly(
         margin = dict(l=10, r=10, b=10, t=40 if title else 10)
     elif isinstance(margin, int):
         margin = dict(l=margin, r=margin, b=margin, t=margin + (40 if title else 0))
-    
+
     # Generate word cloud
     wordcloud = WordCloud(
-        width=1000, # 2000
-        height=500, # 1000
+        width=1000,  # 2000
+        height=500,  # 1000
         background_color=background_color,
         colormap=colormap,
         max_words=max_words,
@@ -71,24 +79,17 @@ def create_wordcloud_plotly(
         font_path=font_path,
         color_func=color_func,
         regexp=regexp,
-        collocation_threshold=collocation_threshold
+        collocation_threshold=collocation_threshold,
     ).generate(text)
-    
+
     # Convert to numpy array
     wordcloud_array = np.asarray(wordcloud)
-    
+
     # Create figure
-    fig = go.Figure(
-        go.Image(
-            z=wordcloud_array,
-            hoverinfo='skip',
-            xaxis='x',
-            yaxis='y'
-        )
-    )
+    fig = go.Figure(go.Image(z=wordcloud_array, hoverinfo="skip", xaxis="x", yaxis="y"))
     # Update layout
     fig.update_layout(
-        title_text=title if title else '',
+        title_text=title if title else "",
         plot_bgcolor=background_color,
         paper_bgcolor=background_color,
         margin=margin,
@@ -98,20 +99,20 @@ def create_wordcloud_plotly(
             visible=False,
             # fixedrange=True,
             # range=[20, width - 20],
-            scaleanchor='y'
+            scaleanchor="y",
         ),
         yaxis=dict(
             visible=False,
             # fixedrange=True,
             # range=[height - 20, 20],
-            scaleanchor='x'
-        )
+            scaleanchor="x",
+        ),
     )
     # Apply any additional figure kwargs
     if plotly_kwargs:
         fig.update_layout(**plotly_kwargs)
-    
+
     if not return_fig:
-        fig.show(config={'scrollZoom': scroll_zoom})
+        fig.show(config={"scrollZoom": scroll_zoom})
     else:
         return fig

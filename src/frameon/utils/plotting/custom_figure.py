@@ -1,30 +1,38 @@
-from typing import Union, Optional, Literal,  List, Dict
-import plotly.express as px
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
+"""
+Extended Plotly Figure class with additional styling functionality.
+
+This module provides a CustomFigure class that extends Plotly's Figure with
+convenient update methods and pre-configured template settings for consistent
+visualizations.
+"""
+
+import json
 import re
 from pathlib import Path
+from typing import Dict, List, Literal, Optional, Union
+
+import plotly.graph_objects as go
 import plotly.io as pio
-import json
 
 __all__ = []
 
 # Load and register the custom template
-_template_path = Path(__file__).parent / 'plotly_config.json'
+_template_path = Path(__file__).parent / "plotly_config.json"
 
-with open(_template_path, 'r') as f:
+with open(_template_path, "r") as f:
     custom_template = json.load(f)
 
-pio.templates['frameon_template'] = custom_template
-pio.templates.default = 'frameon_template'
+pio.templates["frameon_template"] = custom_template
+pio.templates.default = "frameon_template"
+
 
 class CustomFigure(go.Figure):
     """Custom Figure class with extended update functionality."""
+
     def __init__(self, *args, **kwargs):
         """
         Initialize the CustomFigure.
-        
+
         Parameters
         ----------
         args : tuple
@@ -33,11 +41,11 @@ class CustomFigure(go.Figure):
             Keyword arguments passed to go.Figure
         """
         super().__init__(*args, **kwargs)
-            
+
     def update(
         self,
         title_text: Optional[str] = None,
-        title_y:  Optional[float] = None,
+        title_y: Optional[float] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
         xaxis_title_text: Optional[str] = None,
@@ -61,25 +69,25 @@ class CustomFigure(go.Figure):
         yaxis_range: Optional[List[Union[int, float]]] = None,
         yaxis_domain: Optional[List[float]] = None,
         legend_title_text: Optional[str] = None,
-        legend_position: Literal['top', 'right', 'bottom'] = None,
+        legend_position: Literal["top", "right", "bottom"] = None,
         showlegend: Optional[bool] = None,
         legend_x: Optional[float] = None,
         legend_y: Optional[float] = None,
-        legend_xanchor: Literal['auto', 'left', 'center', 'right'] = None,
-        legend_yanchor: Literal['auto', 'top', 'middle', 'bottom'] = None,
-        legend_orientation: Literal['v', 'h'] = None,
-        legend_itemsizing: Literal['trace', 'constant'] = None,
+        legend_xanchor: Literal["auto", "left", "center", "right"] = None,
+        legend_yanchor: Literal["auto", "top", "middle", "bottom"] = None,
+        legend_orientation: Literal["v", "h"] = None,
+        legend_itemsizing: Literal["trace", "constant"] = None,
         legend_tracegroupgap: Optional[float] = None,
         textposition: Optional[str] = None,
         texttemplate: Optional[str] = None,
         textfont: Optional[Dict[str, Union[int, str]]] = None,
         hovertemplate: Optional[str] = None,
-        hovermode: Literal['x', 'y', 'closest', 'x unified', False] = None,
+        hovermode: Literal["x", "y", "closest", "x unified", False] = None,
         hoverlabel_align: Optional[str] = None,
         opacity: Optional[float] = None,
         bargap: Optional[float] = None,
-        barmode: Optional[Literal['group', 'stack', 'overlay']] = None,
-        boxmode: Optional[Literal['group', 'stack', 'overlay']] = None,
+        barmode: Optional[Literal["group", "stack", "overlay"]] = None,
+        boxmode: Optional[Literal["group", "stack", "overlay"]] = None,
         bargroupgap: Optional[float] = None,
         margin: Optional[Dict[str, int]] = None,
         annotations: Optional[List[Dict]] = None,
@@ -89,7 +97,7 @@ class CustomFigure(go.Figure):
         hoverlabel: Optional[Dict[str, Union[int, str]]] = None,
         coloraxis: Optional[Dict] = None,
         plot_bgcolor: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> "CustomFigure":
         """
         Update the figure with consistent styling settings while maintaining all existing functionality.
@@ -362,9 +370,9 @@ class CustomFigure(go.Figure):
             Plotly template name for consistent styling.
 
             Options: "plotly", "plotly_white", "plotly_dark", "ggplot2",
-            
+
                     "seaborn", "simple_white", "presentation",
-                    
+
                     "xgridoff", "ygridoff", "non"
 
         hoverlabel (Optional[Dict[str, Union[int, str]]]):
@@ -378,22 +386,22 @@ class CustomFigure(go.Figure):
             Example of usage:
 
                 coloraxis={
-                    
+
                     'colorscale': 'Viridis',
                     'cmin': 0,
                     'cmax': 70,
                     'colorbar': {
-                        
+
                         'title_text': 'Initial Colorbar',
                         'len': 0.7,
                         'thickness': 20,
                         'ticks': 'outside',
                         'outlinewidth': 0
-                        
+
                     }
-                    
+
                 }
-                
+
         plot_bgcolor : str, optional
             Sets the background color of the plotting area in-between x and y axes.
         kwargs:
@@ -493,26 +501,26 @@ class CustomFigure(go.Figure):
         yaxis_tickvals: Optional[List[Union[int, float]]] = None,
         yaxis_range: Optional[List[Union[int, float]]] = None,
         yaxis_domain: Optional[List[float]] = None,
-        legend_position: Literal['top', 'right', 'bottom'] = None,
+        legend_position: Literal["top", "right", "bottom"] = None,
         legend_title_text: Optional[str] = None,
         showlegend: Optional[bool] = None,
         legend_x: Optional[float] = None,
         legend_y: Optional[float] = None,
-        legend_xanchor: Literal['auto', 'left', 'center', 'right'] = None,
-        legend_yanchor: Literal['auto', 'top', 'middle', 'bottom'] = None,
-        legend_orientation: Literal['v', 'h'] = None,
-        legend_itemsizing: Literal['trace', 'constant'] = None,
+        legend_xanchor: Literal["auto", "left", "center", "right"] = None,
+        legend_yanchor: Literal["auto", "top", "middle", "bottom"] = None,
+        legend_orientation: Literal["v", "h"] = None,
+        legend_itemsizing: Literal["trace", "constant"] = None,
         legend_tracegroupgap: Optional[float] = None,
         textposition: Optional[str] = None,
         texttemplate: Optional[str] = None,
         textfont: Optional[Dict[str, Union[int, str]]] = None,
         hovertemplate: Optional[str] = None,
-        hovermode: Literal['x', 'y', 'closest', 'x unified', False] = None,
+        hovermode: Literal["x", "y", "closest", "x unified", False] = None,
         hoverlabel_align: Optional[str] = None,
         opacity: Optional[float] = None,
         bargap: Optional[float] = None,
-        barmode: Optional[Literal['group', 'stack', 'overlay']] = None,
-        boxmode: Optional[Literal['group', 'stack', 'overlay']] = None,
+        barmode: Optional[Literal["group", "stack", "overlay"]] = None,
+        boxmode: Optional[Literal["group", "stack", "overlay"]] = None,
         bargroupgap: Optional[float] = None,
         margin: Optional[Dict[str, int]] = None,
         annotations: Optional[List[Dict]] = None,
@@ -522,95 +530,98 @@ class CustomFigure(go.Figure):
         hoverlabel: Optional[Dict[str, Union[int, str]]] = None,
         coloraxis: Optional[Dict] = None,
         plot_bgcolor: Optional[str] = None,
-        ) -> None:
+    ) -> None:
         """
         Internal method to handle the figure updates with our custom parameters.
         """
-        # First, we set the position of the legend so that you can further use the parameters for the bastard of the legend
+        # First, we set the position of the legend so that you can further
+        # use the parameters for the bastard of the legend
         if legend_position:
             self._set_legend_position(legend_position)
         # Layout updates
         layout_updates = {
-            'title_text': title_text,
-            'title_y': title_y,
-            'width': width,
-            'height': height,
-            'legend_title_text': legend_title_text,
-            'showlegend': showlegend,
-            'template': template,
-            'hovermode': hovermode,
-            'bargap': bargap,
-            'barmode': barmode,
-            'boxmode': boxmode,
-            'bargroupgap': bargroupgap,
-            'margin': margin,
-            'annotations': annotations,
-            'coloraxis': coloraxis,
-            'plot_bgcolor': plot_bgcolor,
+            "title_text": title_text,
+            "title_y": title_y,
+            "width": width,
+            "height": height,
+            "legend_title_text": legend_title_text,
+            "showlegend": showlegend,
+            "template": template,
+            "hovermode": hovermode,
+            "bargap": bargap,
+            "barmode": barmode,
+            "boxmode": boxmode,
+            "bargroupgap": bargroupgap,
+            "margin": margin,
+            "annotations": annotations,
+            "coloraxis": coloraxis,
+            "plot_bgcolor": plot_bgcolor,
         }
 
         # Update layout only if there are updates
         layout_updates = {k: v for k, v in layout_updates.items() if v is not None}
         if layout_updates:
             self.update_layout(**layout_updates)
-        self.update_layout(barmode='group')
+        self.update_layout(barmode="group")
         # X-axis settings
         xaxis_updates = {
-            'showgrid': xaxis_showgrid,
-            'dtick': xaxis_dtick,
-            'title_text': xaxis_title_text,
-            'tickformat': xaxis_tickformat,
-            'range': xaxis_range,
-            'tickprefix': xaxis_tickprefix,
-            'ticksuffix': xaxis_ticksuffix,
-            'ticktext': xaxis_ticktext,
-            'tickvals': xaxis_tickvals,
+            "showgrid": xaxis_showgrid,
+            "dtick": xaxis_dtick,
+            "title_text": xaxis_title_text,
+            "tickformat": xaxis_tickformat,
+            "range": xaxis_range,
+            "tickprefix": xaxis_tickprefix,
+            "ticksuffix": xaxis_ticksuffix,
+            "ticktext": xaxis_ticktext,
+            "tickvals": xaxis_tickvals,
         }
         self.update_xaxes(**{k: v for k, v in xaxis_updates.items() if v is not None})
 
         # Y-axis settings
         yaxis_updates = {
-            'showgrid': yaxis_showgrid,
-            'dtick': yaxis_dtick,
-            'title_text': yaxis_title_text,
-            'tickformat': yaxis_tickformat,
-            'range': yaxis_range,
-            'tickprefix': yaxis_tickprefix,
-            'ticksuffix': yaxis_ticksuffix,
-            'ticktext': yaxis_ticktext,
-            'tickvals': yaxis_tickvals,
+            "showgrid": yaxis_showgrid,
+            "dtick": yaxis_dtick,
+            "title_text": yaxis_title_text,
+            "tickformat": yaxis_tickformat,
+            "range": yaxis_range,
+            "tickprefix": yaxis_tickprefix,
+            "ticksuffix": yaxis_ticksuffix,
+            "ticktext": yaxis_ticktext,
+            "tickvals": yaxis_tickvals,
         }
         self.update_yaxes(**{k: v for k, v in yaxis_updates.items() if v is not None})
 
         # Legend settings
         legend_updates = {
-            'orientation': legend_orientation,
-            'x': legend_x,
-            'y': legend_y,
-            'yanchor': legend_yanchor,
-            'xanchor': legend_xanchor,
-            'itemsizing': legend_itemsizing,
+            "orientation": legend_orientation,
+            "x": legend_x,
+            "y": legend_y,
+            "yanchor": legend_yanchor,
+            "xanchor": legend_xanchor,
+            "itemsizing": legend_itemsizing,
         }
 
-        self.update_layout(legend={k: v for k, v in legend_updates.items() if v is not None})
+        self.update_layout(
+            legend={k: v for k, v in legend_updates.items() if v is not None}
+        )
 
         # Update traces if necessary
         trace_updates = {}
         if hovertemplate is not None:
-            trace_updates['hovertemplate'] = hovertemplate
+            trace_updates["hovertemplate"] = hovertemplate
         if hoverlabel is not None:
-            trace_updates['hoverlabel'] = hoverlabel
+            trace_updates["hoverlabel"] = hoverlabel
         if textposition is not None:
-            trace_updates['textposition'] = textposition
+            trace_updates["textposition"] = textposition
         if texttemplate is not None:
             self.update_traces(texttemplate=texttemplate)
         if opacity is not None:
-            trace_updates['opacity'] = opacity
+            trace_updates["opacity"] = opacity
 
         if trace_updates:
             self.update_traces(**trace_updates)
 
-        if self.data and self.data[0].type == 'heatmap':
+        if self.data and self.data[0].type == "heatmap":
             self.update_traces(xgap=xgap, ygap=ygap)
 
         if textfont is not None:
@@ -623,57 +634,57 @@ class CustomFigure(go.Figure):
             )
         for trace in self.data:
             if trace.hovertemplate:
-                trace.hovertemplate = re.sub(r'\s*=\s*', ' = ', trace.hovertemplate)
+                trace.hovertemplate = re.sub(r"\s*=\s*", " = ", trace.hovertemplate)
 
     def _set_legend_position(
         self,
-        legend_position: Literal['top', 'right', 'bottom'] = 'top',
+        legend_position: Literal["top", "right", "bottom"] = "top",
         yaxis_domain: Optional[List[float]] = None,
-        orientation: Optional[Literal['h', 'v']] = None,
-        yanchor: Optional[Literal['auto', 'top', 'middle', 'bottom']] = None,
+        orientation: Optional[Literal["h", "v"]] = None,
+        yanchor: Optional[Literal["auto", "top", "middle", "bottom"]] = None,
         y: Optional[float] = None,
-        xanchor: Optional[Literal['auto', 'left', 'center', 'right']] = None,
+        xanchor: Optional[Literal["auto", "left", "center", "right"]] = None,
         x: Optional[float] = None,
-        itemsizing: Optional[Literal['trace', 'constant']] = None
-        ):
+        itemsizing: Optional[Literal["trace", "constant"]] = None,
+    ):
         """
         Sets the position of the legend in the plot.
         """
-        if legend_position == 'top':
-            self.update_yaxes(domain = yaxis_domain if yaxis_domain else [0, 0.95])
+        if legend_position == "top":
+            self.update_yaxes(domain=yaxis_domain if yaxis_domain else [0, 0.95])
             self.update_layout(
-                legend = dict(
-                    orientation=orientation if orientation else "h"
-                    , yanchor=yanchor if yanchor else "top"
-                    , y=y if y else 1.06
-                    , xanchor=xanchor if xanchor else "center"
-                    , x=x if x else 0.5
-                    , itemsizing=itemsizing if itemsizing else "constant"
+                legend=dict(
+                    orientation=orientation if orientation else "h",
+                    yanchor=yanchor if yanchor else "top",
+                    y=y if y else 1.06,
+                    xanchor=xanchor if xanchor else "center",
+                    x=x if x else 0.5,
+                    itemsizing=itemsizing if itemsizing else "constant",
                     # , bordercolor='rgba(0,0,0,0.1)'
                     # , borderwidth=1
                 )
             )
-        elif legend_position == 'right':
+        elif legend_position == "right":
             self.update_layout(
-                legend = dict(
-                    xanchor=xanchor if xanchor else None
-                    , yanchor=yanchor if yanchor else None
-                    , orientation=orientation if orientation else "v"
-                    , y=y if y else 1
-                    , x=None
-                    , itemsizing=itemsizing if itemsizing else "constant"
+                legend=dict(
+                    xanchor=xanchor if xanchor else None,
+                    yanchor=yanchor if yanchor else None,
+                    orientation=orientation if orientation else "v",
+                    y=y if y else 1,
+                    x=None,
+                    itemsizing=itemsizing if itemsizing else "constant",
                 )
             )
-        elif legend_position == 'bottom':
+        elif legend_position == "bottom":
             self.update_layout(
-                legend = dict(
-                    title_text='Score'
-                    , orientation=orientation if orientation else "h"
-                    , yanchor=yanchor if yanchor else "bottom"
-                    , y=y if y else -0.15
-                    , xanchor=xanchor if xanchor else "center"
-                    , x=x if x else 0.5
-                    , itemsizing=itemsizing if itemsizing else "constant"
+                legend=dict(
+                    title_text="Score",
+                    orientation=orientation if orientation else "h",
+                    yanchor=yanchor if yanchor else "bottom",
+                    y=y if y else -0.15,
+                    xanchor=xanchor if xanchor else "center",
+                    x=x if x else 0.5,
+                    itemsizing=itemsizing if itemsizing else "constant",
                     # , bordercolor='rgba(0,0,0,0.1)'
                     # , borderwidth=1
                 )

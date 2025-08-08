@@ -1,5 +1,10 @@
-from frameon.utils import miscellaneous
-from frameon.utils import plotting
+"""
+Utility functions and helpers for the frameon package.
+
+Provides miscellaneous helper functions and plotting utilities.
+"""
+
+from frameon.utils import miscellaneous, plotting
 
 __all__ = []
 __all__ += miscellaneous.__all__

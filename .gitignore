@@ -45,4 +45,6 @@ htmlcov/
 .pylint_cache/
 
 # Flake8 cache
-.flake8
+.flake8/
+.ruff_cache/
+.mypy_cache/

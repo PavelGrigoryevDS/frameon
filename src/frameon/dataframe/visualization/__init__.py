@@ -1,14 +1,23 @@
+"""
+DataFrame visualization methods for data exploration.
+
+Provides functionality for creating various types of plots
+and customizing visualization settings.
+"""
+
 from typing import TYPE_CHECKING
+
 from frameon.dataframe.visualization.plot import FrameOnPlots
+
 if TYPE_CHECKING:
     from frameon.core.base import FrameOn
 
-class FrameOnViz(FrameOnPlots):
 
+class FrameOnViz(FrameOnPlots):
     def __init__(self, parent_df: "FrameOn"):
         super().__init__(parent_df)
         self._plotly_settings = {}
-        
+
     @property
     def plotly_settings(self) -> dict:
         """Get current Plotly visualization settings."""
@@ -17,7 +26,7 @@ class FrameOnViz(FrameOnPlots):
     def update_plotly_settings(self, **kwargs) -> None:
         """
         Update Plotly visualization settings.
-        
+
         Args:
             **kwargs: Plotly settings like labels, category_orders, etc.
         """

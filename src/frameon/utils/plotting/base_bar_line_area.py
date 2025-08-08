@@ -900,7 +900,6 @@ class BarLineAreaBuilder:
         # Change type for all categories to str for plotly
         if group_cols:
             df_agg[group_cols] = df_agg[group_cols].astype(str)
-        self.plotly_kwargs["data_frame"] = df_agg
 
     def _convert_datetime_columns(
         self, format: str = "%Y-%m-%d %H:%M:%S"
@@ -913,7 +912,7 @@ class BarLineAreaBuilder:
                 df[col] = df[col].dt.strftime(format)
 
         self.plotly_kwargs["data_frame"] = df
-
+        
     def _handle_datetime_columns(self, group_cols: List[str]) -> List[str]:
         """Handle datetime columns with frequency specification."""
         df = self.plotly_kwargs["data_frame"]

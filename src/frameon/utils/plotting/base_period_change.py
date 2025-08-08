@@ -130,6 +130,7 @@ def period_change(
     # Update default labels with user-provided labels
     if labels:
         default_labels.update(labels)
+
     if "title" not in plotly_kwargs:
         plotly_kwargs["title"] = change_col_label
     if "width" not in plotly_kwargs:

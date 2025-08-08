@@ -2371,7 +2371,6 @@ class StatisticalTests:
                 display(summary_df[["coef", "p_value", "p_adj"]].round(4))
         elif show_summary:
             display(results.summary())
-
         if return_results:
             return results
 

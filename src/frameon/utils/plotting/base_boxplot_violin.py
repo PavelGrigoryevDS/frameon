@@ -352,6 +352,7 @@ class DistributionPlotBuilder:
         all_periods = pd.period_range(
             start=df[x_col].min(), end=df[x_col].max(), freq=self.config.freq
         ).end_time
+
         df = pd.DataFrame({x_col: all_periods}).merge(df, on=x_col, how="left")
         if "color" in self.plotly_kwargs:
             df[self.plotly_kwargs.get("color")] = df[

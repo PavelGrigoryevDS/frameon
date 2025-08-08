@@ -1,0 +1,28 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13" 
+          
+      - name: Install dependencies
+        run: |
+          pip install black ruff
+          
+      - name: Run Black
+        run: black --check src/ tests/
+        
+      - name: Run Ruff
+        run: ruff check src/ tests/

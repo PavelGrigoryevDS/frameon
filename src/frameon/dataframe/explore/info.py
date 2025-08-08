@@ -1,24 +1,38 @@
-from typing import Optional, Union, List, Dict, Tuple, Any
-from enum import Enum, auto
-import io
-import base64
-from pandas.io.formats.style import Styler
-import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
-from IPython.display import display
-import numpy as np
-from plotly.subplots import make_subplots
-from frameon.utils.miscellaneous import style_dataframe, add_empty_columns_for_df, format_number, format_count_with_percentage, validate_is_DataFrame, is_categorical_column, is_text_column, is_int_column, is_datetime_column, is_float_column, get_column_type
+"""
+DataFrame information analysis tools.
 
-__all__ = ['FrameOnInfo']
+Provides functionality for:
+- Generating comprehensive DataFrame overviews
+- Calculating missing values statistics
+- Identifying duplicate rows
+- Analyzing column types
+"""
+
+import pandas as pd
+from pandas.io.formats.style import Styler
+
+from frameon.utils.miscellaneous import (
+    add_empty_columns_for_df,
+    format_count_with_percentage,
+    format_number,
+    is_categorical_column,
+    is_datetime_column,
+    is_float_column,
+    is_int_column,
+    is_text_column,
+    style_dataframe,
+)
+
+__all__ = ["FrameOnInfo"]
+
 
 class FrameOnInfo:
     """
     Class containing methods for DataFrame information analysis.
     """
+
     def __init__(self, df: pd.DataFrame):
-        self._df = df 
+        self._df = df
 
     def info(self) -> Styler:
         """
@@ -26,7 +40,7 @@ class FrameOnInfo:
 
         Returns:
         --------
-            A pandas Styler object with formatted overview table ready for HTML display          
+            A pandas Styler object with formatted overview table ready for HTML display
         """
         # Calculate basic statistics
         total_rows = self._df.shape[0]
@@ -37,14 +51,22 @@ class FrameOnInfo:
         # Calculate missing values
         total_cells = total_rows * total_cols
         missing_cells = self._df.isna().sum().sum()
-        missing_cells = format_count_with_percentage(missing_cells, total_cells)  if missing_cells else '---'
+        missing_cells = (
+            format_count_with_percentage(missing_cells, total_cells)
+            if missing_cells
+            else "---"
+        )
         col_types = {
-            'Text': sum(is_text_column(self._df[col]) for col in self._df.columns),
-            'Categorical': sum(is_categorical_column(self._df[col]) for col in self._df.columns),
-            'Int': sum(is_int_column(self._df[col]) for col in self._df.columns),
-            'Float': sum(is_float_column(self._df[col]) for col in self._df.columns),
-            'Datetime': sum(is_datetime_column(self._df[col]) for col in self._df.columns)
-        }        
+            "Text": sum(is_text_column(self._df[col]) for col in self._df.columns),
+            "Categorical": sum(
+                is_categorical_column(self._df[col]) for col in self._df.columns
+            ),
+            "Int": sum(is_int_column(self._df[col]) for col in self._df.columns),
+            "Float": sum(is_float_column(self._df[col]) for col in self._df.columns),
+            "Datetime": sum(
+                is_datetime_column(self._df[col]) for col in self._df.columns
+            ),
+        }
         # Calculate duplicate statistics
         exact_dups = self._calculate_duplicates_in_df(exact=True)
         fuzzy_dups = self._calculate_duplicates_in_df(exact=False)
@@ -54,33 +76,36 @@ class FrameOnInfo:
             "Rows": format_number(total_rows),
             "Features": total_cols,
             "Missing cells": missing_cells,
-            "Exact Duplicates": exact_dups,  
-            "Fuzzy Duplicates": fuzzy_dups, 
+            "Exact Duplicates": exact_dups,
+            "Fuzzy Duplicates": fuzzy_dups,
             "Memory Usage (Mb)": ram,
         }
 
         # Convert to DataFrame and style
         summary_df = pd.DataFrame.from_dict(
             summary_data, orient="index", columns=["Value"]
-        ).reset_index(names='Metric')
+        ).reset_index(names="Metric")
         # Convert to DataFrame and style
         col_types_df = pd.DataFrame.from_dict(
-            col_types, 
-            orient="index", 
-            columns=["Value"]
-        ).reset_index(names='Metric')
-        col_types_df['Value'] = col_types_df['Value'].astype(str)
+            col_types, orient="index", columns=["Value"]
+        ).reset_index(names="Metric")
+        col_types_df["Value"] = col_types_df["Value"].astype(str)
         # Concatenate all DataFrames along the columns (axis=1)
         full_summary = pd.concat([summary_df, col_types_df], axis=1)
         full_summary.columns = pd.MultiIndex.from_tuples(
-            [('Summary', 'Metric'), ('Summary', 'Value'),
-            ('Column Types', 'Metric'), ('Column Types', 'Value')]
-
+            [
+                ("Summary", "Metric"),
+                ("Summary", "Value"),
+                ("Column Types", "Metric"),
+                ("Column Types", "Value"),
+            ]
         )
         full_summary = add_empty_columns_for_df(full_summary, [2])
-        caption='Dataframe Overview'
-        styled_summary = style_dataframe(full_summary, level=1, caption=caption, header_alignment='center')
-        return styled_summary  
+        caption = "Dataframe Overview"
+        styled_summary = style_dataframe(
+            full_summary, level=1, caption=caption, header_alignment="center"
+        )
+        return styled_summary
 
     def _calculate_duplicates_in_df(self, exact: bool = True) -> str:
         """
@@ -137,7 +162,7 @@ class FrameOnInfo:
             formatted_count = format_number(dup_count)
             return f"{formatted_count} ({percentage_str}%)"
 
-        except Exception as e:
+        except Exception:
             # Graceful fallback for any calculation errors
             # print(f"Duplicate calculation error: {str(e)}")
             return "---"

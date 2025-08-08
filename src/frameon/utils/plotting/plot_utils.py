@@ -1,9 +1,12 @@
-import pandas as pd
-import numpy as np
-from typing import Union, Optional, Literal,  List, Dict
-import plotly.express as px
+"""
+Plotting utility functions for creating complex visualizations.
+
+This module provides tools for subplot creation and layout management,
+primarily focused on working with Plotly figures.
+"""
+
 from plotly.subplots import make_subplots
-import plotly.graph_objects as go
+
 
 def subplots(
     configs,
@@ -18,7 +21,7 @@ def subplots(
     specs=None,
     column_widths=None,
     row_heights=None,
-    subplot_titles=None
+    subplot_titles=None,
 ):
     """
     Creates a figure with multiple subplots using Plotly.
@@ -134,95 +137,105 @@ def subplots(
         subplot_titles=subplot_titles,
         shared_xaxes=shared_xaxes,
         shared_yaxes=shared_yaxes,
-        horizontal_spacing=horizontal_spacing
+        horizontal_spacing=horizontal_spacing,
     )
 
     # Process each subplot configuration
     if configs:
         for config in configs:
-            if not config['fig']:
+            if not config["fig"]:
                 continue
 
             # Set default values for configuration
-            config['is_margin'] = config.get('is_margin', False)
-            config['with_margin'] = config.get('with_margin', False)
-            config['show_yaxis_title'] = config.get('show_yaxis_title', True)
-            config['show_xaxis_title'] = config.get('show_xaxis_title', True)
+            config["is_margin"] = config.get("is_margin", False)
+            config["with_margin"] = config.get("with_margin", False)
+            config["show_yaxis_title"] = config.get("show_yaxis_title", True)
+            config["show_xaxis_title"] = config.get("show_xaxis_title", True)
 
             # Handle margin plot settings
-            if config['is_margin']:
-                config['domain_y'] = config.get('domain_y', [0.95, 1])
-                config['showgrid_x'] = config.get('showgrid_x', False)
-                config['showgrid_y'] = config.get('showgrid_y', False)
-                config['showticklabels_x'] = config.get('showticklabels_x', False)
-                config['xaxis_visible'] = config.get('xaxis_visible', False)
-                config['yaxis_visible'] = config.get('yaxis_visible', False)
+            if config["is_margin"]:
+                config["domain_y"] = config.get("domain_y", [0.95, 1])
+                config["showgrid_x"] = config.get("showgrid_x", False)
+                config["showgrid_y"] = config.get("showgrid_y", False)
+                config["showticklabels_x"] = config.get("showticklabels_x", False)
+                config["xaxis_visible"] = config.get("xaxis_visible", False)
+                config["yaxis_visible"] = config.get("yaxis_visible", False)
             else:
                 # Handle regular plot settings
-                if config['with_margin']:
-                    config['domain_y'] = config.get('domain_y', [0, 0.9])
-                config['showgrid_x'] = config.get('showgrid_x', True)
-                config['showgrid_y'] = config.get('showgrid_y', True)
-                config['showticklabels_x'] = config.get('showticklabels_x', True)
-                config['xaxis_visible'] = config.get('xaxis_visible', True)
-                config['yaxis_visible'] = config.get('yaxis_visible', True)
+                if config["with_margin"]:
+                    config["domain_y"] = config.get("domain_y", [0, 0.9])
+                config["showgrid_x"] = config.get("showgrid_x", True)
+                config["showgrid_y"] = config.get("showgrid_y", True)
+                config["showticklabels_x"] = config.get("showticklabels_x", True)
+                config["xaxis_visible"] = config.get("xaxis_visible", True)
+                config["yaxis_visible"] = config.get("yaxis_visible", True)
 
             # Set axis titles
-            if config['show_xaxis_title']:
-                config['xaxis_title_text'] = config['layout'].xaxis.title.text if 'layout' in config else None
+            if config["show_xaxis_title"]:
+                config["xaxis_title_text"] = (
+                    config["layout"].xaxis.title.text if "layout" in config else None
+                )
             else:
-                config['xaxis_title_text'] = None
-            if config['show_yaxis_title']:
-                config['yaxis_title_text'] = config['layout'].yaxis.title.text if 'layout' in config else None
+                config["xaxis_title_text"] = None
+            if config["show_yaxis_title"]:
+                config["yaxis_title_text"] = (
+                    config["layout"].yaxis.title.text if "layout" in config else None
+                )
             else:
-                config['yaxis_title_text'] = None
+                config["yaxis_title_text"] = None
 
             # Add trace and update axes
-            fig.add_trace(config['fig'], row=config['row'], col=config['col'])
+            fig.add_trace(config["fig"], row=config["row"], col=config["col"])
 
             # Update X axes
             fig.update_xaxes(
-                row=config['row'],
-                col=config['col'],
-                showgrid=config['showgrid_x'],
-                showticklabels=config['showticklabels_x'],
+                row=config["row"],
+                col=config["col"],
+                showgrid=config["showgrid_x"],
+                showticklabels=config["showticklabels_x"],
                 # visible=config['xaxis_visible'],
-                title_text=config['xaxis_title_text'],
+                title_text=config["xaxis_title_text"],
                 gridwidth=1,
-                gridcolor="rgba(0, 0, 0, 0.1)"
+                gridcolor="rgba(0, 0, 0, 0.1)",
             )
 
             # Update domains if specified
-            if 'domain_x' in config:
-                fig.update_xaxes(row=config['row'], col=config['col'], domain=config['domain_x'])
-            if 'domain_y' in config:
-                fig.update_yaxes(row=config['row'], col=config['col'], domain=config['domain_y'])
+            if "domain_x" in config:
+                fig.update_xaxes(
+                    row=config["row"], col=config["col"], domain=config["domain_x"]
+                )
+            if "domain_y" in config:
+                fig.update_yaxes(
+                    row=config["row"], col=config["col"], domain=config["domain_y"]
+                )
             # Update Y axes
             fig.update_yaxes(
-                row=config['row'],
-                col=config['col'],
+                row=config["row"],
+                col=config["col"],
                 # showgrid=config['showgrid_y'],
                 gridwidth=1,
                 gridcolor="rgba(0, 0, 0, 0.1)",
-                visible=config['yaxis_visible'],
-                title_text=config['yaxis_title_text']
+                visible=config["yaxis_visible"],
+                title_text=config["yaxis_title_text"],
             )
             # fig.update_traces(selector=dict(type='pie'),
             #       marker=dict(colors=colorway_for_bar))
-            fig_update(fig, xaxis_showgrid = config['showgrid_x'], yaxis_showgrid = config['showgrid_y'])
+            fig.update_layout(
+                xaxis_showgrid=config["showgrid_x"],
+                yaxis_showgrid=config["showgrid_y"],
+            )
 
     # Adjust subplot titles position
     if subplot_titles:
         for i, _ in enumerate(subplot_titles):
-            fig['layout']['annotations'][i-1]['y'] = 1.04
-
+            fig["layout"]["annotations"][i - 1]["y"] = 1.04
 
     # Update figure layout
     fig.update_layout(
         title_text=title,
         width=width,
         height=height,
-        margin =  dict(l=50, r=50, b=50, t=50),
+        margin=dict(l=50, r=50, b=50, t=50),
         # font=dict(size=14, family="Noto Sans", color="rgba(0, 0, 0, 0.7)"),
         # title_font_size= 16,
         # xaxis_showticklabels=True,

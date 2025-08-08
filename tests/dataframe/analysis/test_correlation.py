@@ -57,13 +57,19 @@ class TestCorrelationAnalyzer:
         analyzer = CorrelationAnalyzer(FrameOn())
         with pytest.raises(ValueError) as excinfo:
             analyzer.corr_matrix()
-        assert "Not enough numeric columns for correlation analysis (need at least 2)" in str(excinfo.value)
+        assert (
+            "Not enough numeric columns for correlation analysis (need at least 2)"
+            in str(excinfo.value)
+        )
 
         # Test single numeric column
-        analyzer = CorrelationAnalyzer(FrameOn({'col1': [1, 2, 3]}))
+        analyzer = CorrelationAnalyzer(FrameOn({"col1": [1, 2, 3]}))
         with pytest.raises(ValueError) as excinfo:
             analyzer.corr_matrix()
-        assert "Not enough numeric columns for correlation analysis (need at least 2)" in str(excinfo.value)
+        assert (
+            "Not enough numeric columns for correlation analysis (need at least 2)"
+            in str(excinfo.value)
+        )
 
     def test_custom_labels(self, sample_numeric_data):
         """Test custom column labels"""

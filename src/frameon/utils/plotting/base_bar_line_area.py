@@ -912,7 +912,7 @@ class BarLineAreaBuilder:
                 df[col] = df[col].dt.strftime(format)
 
         self.plotly_kwargs["data_frame"] = df
-        
+
     def _handle_datetime_columns(self, group_cols: List[str]) -> List[str]:
         """Handle datetime columns with frequency specification."""
         df = self.plotly_kwargs["data_frame"]

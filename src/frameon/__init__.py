@@ -20,8 +20,6 @@ from .api.utils import (
 from .core.base import FrameOn
 from .datasets import load_dataset
 
-# Import CustomFigure after core dependencies to avoid circular imports
-
 __version__ = version("frameon")
 
 __all__ = [

@@ -12,8 +12,6 @@
 
 Frameon extends pandas DataFrame with analysis methods while keeping all original functionality intact.
 
-⭐ **If you find Frameon useful, please star the GitHub repo!** It helps others discover the project and motivates further development.
-
 ---
 
 ## ✨ Key Features
